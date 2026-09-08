@@ -4,6 +4,9 @@ import { Observable, of, catchError, map } from 'rxjs';
 
 export interface UsuarioMasterDTO {
   id?: string;
+  usuarioId?: string;
+  personaId?: string;
+  tieneUsuario?: boolean;
   negocioId?: string;
   negocioNombre?: string;
   email: string;
@@ -14,7 +17,6 @@ export interface UsuarioMasterDTO {
   perfilNombre?: string;
   acciones?: string[];
   
-  personaId?: string;
   tipoDocumento: string;
   numeroDocumento: string;
   nombres: string;
@@ -23,6 +25,7 @@ export interface UsuarioMasterDTO {
   telefono?: string;
   direccion?: string;
   nroColegiatura?: string;
+  fechanacimiento?: string;
 }
 
 export interface TenantSimpleDTO {

@@ -51,23 +51,23 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
       <!-- KPI Summary Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div class="glass-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <span class="text-[11px] font-bold uppercase text-slate-400">Total Usuarios</span>
+          <span class="text-[11px] font-bold uppercase text-slate-400">Total Colaboradores</span>
           <p class="text-2xl font-black text-slate-900 dark:text-white font-mono mt-1">{{ usuarios.length }}</p>
         </div>
 
         <div class="glass-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <span class="text-[11px] font-bold uppercase text-emerald-600 dark:text-emerald-400">👑 Admins Empresa</span>
-          <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">{{ totalAdmins }}</p>
+          <span class="text-[11px] font-bold uppercase text-emerald-600 dark:text-emerald-400">🔑 Con Usuario</span>
+          <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">{{ totalConUsuario }}</p>
         </div>
 
         <div class="glass-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <span class="text-[11px] font-bold uppercase text-purple-600 dark:text-purple-400">💊 Químicos Q.F.</span>
-          <p class="text-2xl font-black text-purple-600 dark:text-purple-400 font-mono mt-1">{{ totalQuimicos }}</p>
+          <span class="text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">👤 Sin Usuario</span>
+          <p class="text-2xl font-black text-slate-500 dark:text-slate-300 font-mono mt-1">{{ totalSinUsuario }}</p>
         </div>
 
         <div class="glass-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <span class="text-[11px] font-bold uppercase text-blue-600 dark:text-blue-400">🛒 Cajeros / POS</span>
-          <p class="text-2xl font-black text-blue-600 dark:text-blue-400 font-mono mt-1">{{ totalCajeros }}</p>
+          <span class="text-[11px] font-bold uppercase text-amber-600 dark:text-amber-400">👑 Admins</span>
+          <p class="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono mt-1">{{ totalAdmins }}</p>
         </div>
 
         <div class="glass-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
@@ -94,7 +94,7 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
         <div class="flex items-center gap-2 w-full md:w-auto">
           <div class="relative flex-1 md:w-64">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" [(ngModel)]="busqueda" placeholder="Buscar usuario, DNI, email..."
+            <input type="text" [(ngModel)]="busqueda" placeholder="Buscar colaborador, DNI, email..."
                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500">
           </div>
 
@@ -104,20 +104,15 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
                     class="px-3 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 transition-colors whitespace-nowrap">
               Todos
             </button>
-            <button (click)="filtroRol = 'ADMIN_NEGOCIO'"
-                    [class]="filtroRol === 'ADMIN_NEGOCIO' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+            <button (click)="filtroRol = 'CON_USUARIO'"
+                    [class]="filtroRol === 'CON_USUARIO' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
                     class="px-3 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 transition-colors whitespace-nowrap">
-              👑 Admins
+              🔑 Con Login
             </button>
-            <button (click)="filtroRol = 'QUIMICO_FARMACEUTICO'"
-                    [class]="filtroRol === 'QUIMICO_FARMACEUTICO' ? 'bg-purple-600 text-white' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+            <button (click)="filtroRol = 'SIN_USUARIO'"
+                    [class]="filtroRol === 'SIN_USUARIO' ? 'bg-slate-600 text-white' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
                     class="px-3 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 transition-colors whitespace-nowrap">
-              💊 Químicos
-            </button>
-            <button (click)="filtroRol = 'CAJERO_VENDEDOR'"
-                    [class]="filtroRol === 'CAJERO_VENDEDOR' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
-                    class="px-3 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 transition-colors whitespace-nowrap">
-              🛒 Cajeros
+              👤 Sin Login
             </button>
           </div>
         </div>
@@ -130,10 +125,10 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
             <thead class="bg-slate-100/90 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wider font-semibold">
               <tr>
                 <th class="px-6 py-4">Empresa / Negocio</th>
-                <th class="px-6 py-4">Personal & Nombres</th>
+                <th class="px-6 py-4">Colaborador / Personal</th>
                 <th class="px-6 py-4">Documento / DNI</th>
-                <th class="px-6 py-4">Email de Acceso</th>
-                <th class="px-6 py-4">Perfil / Rol</th>
+                <th class="px-6 py-4">Acceso Login</th>
+                <th class="px-6 py-4">Cargo / Perfil</th>
                 <th class="px-6 py-4">Colegiatura / PIN</th>
                 <th class="px-6 py-4 text-center">Estado</th>
                 <th class="px-6 py-4 text-right">Acciones</th>
@@ -143,7 +138,7 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
               <tr *ngIf="usuariosFiltrados.length === 0" class="text-center text-slate-500">
                 <td colspan="8" class="px-6 py-12">
                   <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-400 dark:text-slate-600 block"></i>
-                  <span class="text-sm font-medium">No se encontraron usuarios para la empresa o filtro seleccionado.</span>
+                  <span class="text-sm font-medium">No se encontraron colaboradores para la empresa o filtro seleccionado.</span>
                 </td>
               </tr>
 
@@ -155,8 +150,8 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
                       <i class="fa-solid fa-store"></i>
                     </span>
                     <div>
-                      <p class="font-bold text-slate-900 dark:text-white leading-tight">{{ u.negocioNombre || 'Salud Total 24 Horas' }}</p>
-                      <span class="text-[10px] font-mono text-slate-400">FARMACIA</span>
+                      <p class="font-bold text-slate-900 dark:text-white leading-tight">{{ u.negocioNombre || 'Empresa' }}</p>
+                      <span class="text-[10px] font-mono text-slate-400">NEGOCIO</span>
                     </div>
                   </div>
                 </td>
@@ -164,13 +159,9 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
                 <!-- Personal & Nombres -->
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2.5">
-                    <div [ngClass]="{
-                           'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20': u.perfilCodigo === 'ADMIN_NEGOCIO',
-                           'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20': u.perfilCodigo === 'QUIMICO_FARMACEUTICO',
-                           'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20': u.perfilCodigo === 'CAJERO_VENDEDOR'
-                         }"
+                    <div [ngClass]="getPerfilBadgeClass(u.perfilCodigo)"
                          class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0">
-                      <i class="fa-solid" [ngClass]="u.perfilCodigo === 'ADMIN_NEGOCIO' ? 'fa-crown' : u.perfilCodigo === 'QUIMICO_FARMACEUTICO' ? 'fa-shield-halved' : 'fa-cash-register'"></i>
+                      <i class="fa-solid" [ngClass]="getPerfilIcon(u.perfilCodigo)"></i>
                     </div>
                     <div>
                       <p class="font-bold text-slate-900 dark:text-white leading-tight">{{ u.nombreCompleto || u.email }}</p>
@@ -185,37 +176,41 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
                   <span>{{ u.numeroDocumento || 'No registrado' }}</span>
                 </td>
 
-                <!-- Email -->
-                <td class="px-6 py-4 font-medium text-slate-600 dark:text-slate-300">
-                  {{ u.email }}
+                <!-- Acceso Login (Badge Con Usuario vs Sin Usuario) -->
+                <td class="px-6 py-4">
+                  <div *ngIf="u.tieneUsuario" class="flex flex-col gap-1">
+                    <span class="px-2 py-0.5 w-max rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] inline-flex items-center gap-1">
+                      <i class="fa-solid fa-key text-[9px]"></i> Con Usuario
+                    </span>
+                    <span class="font-medium text-slate-700 dark:text-slate-300 font-mono text-xs">{{ u.email }}</span>
+                  </div>
+                  <div *ngIf="!u.tieneUsuario" class="flex flex-col gap-1">
+                    <span class="px-2 py-0.5 w-max rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-500 dark:text-slate-400 font-bold text-[10px] inline-flex items-center gap-1">
+                      <i class="fa-solid fa-user text-[9px]"></i> Sin Usuario
+                    </span>
+                    <span class="text-[11px] text-slate-400 italic">Solo Personal</span>
+                  </div>
                 </td>
 
                 <!-- Rol -->
                 <td class="px-6 py-4">
-                  <span *ngIf="u.perfilCodigo === 'ADMIN_NEGOCIO'" class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold text-[10px] inline-flex items-center gap-1.5">
-                    <i class="fa-solid fa-crown text-[9px]"></i>
-                    <span>ADMIN EMPRESA</span>
-                  </span>
-                  <span *ngIf="u.perfilCodigo === 'QUIMICO_FARMACEUTICO'" class="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-400 font-bold text-[10px] inline-flex items-center gap-1.5">
-                    <i class="fa-solid fa-shield-halved text-[9px]"></i>
-                    <span>QUÍMICO Q.F.</span>
-                  </span>
-                  <span *ngIf="u.perfilCodigo === 'CAJERO_VENDEDOR'" class="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 font-bold text-[10px] inline-flex items-center gap-1.5">
-                    <i class="fa-solid fa-cash-register text-[9px]"></i>
-                    <span>CAJERO / POS</span>
+                  <span class="px-2.5 py-1 rounded-full font-bold text-[10px] inline-flex items-center gap-1.5" [ngClass]="getPerfilBadgeClass(u.perfilCodigo)">
+                    <i class="fa-solid text-[9px]" [ngClass]="getPerfilIcon(u.perfilCodigo)"></i>
+                    <span>{{ u.perfilNombre || u.perfilCodigo }}</span>
                   </span>
                 </td>
 
                 <!-- Colegiatura & PIN -->
                 <td class="px-6 py-4 text-[11px] font-mono">
                   <span *ngIf="u.nroColegiatura" class="font-bold text-purple-700 dark:text-purple-300 block mb-0.5">{{ u.nroColegiatura }}</span>
-                  <div class="flex items-center gap-1.5">
+                  <div *ngIf="u.tieneUsuario" class="flex items-center gap-1.5">
                     <span class="text-[10px] text-slate-400">PIN:</span>
                     <span class="font-mono font-bold">{{ mostrarPins[u.id || ''] ? (u.pinSeguridad || '1234') : '••••' }}</span>
                     <button (click)="toggleMostrarPin(u.id)" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-[10px] cursor-pointer">
                       <i class="fa-solid" [ngClass]="mostrarPins[u.id || ''] ? 'fa-eye-slash' : 'fa-eye'"></i>
                     </button>
                   </div>
+                  <span *ngIf="!u.tieneUsuario" class="text-slate-400 text-[10px] italic">Sin PIN</span>
                 </td>
 
                 <!-- Estado -->
@@ -230,15 +225,15 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
 
                 <!-- Acciones -->
                 <td class="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
-                  <button (click)="abrirModalEditar(u)" title="Editar Usuario"
+                  <button (click)="abrirModalEditar(u)" title="Editar Colaborador"
                           class="p-1.5 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors">
                     <i class="fa-solid fa-pen-to-square text-xs"></i>
                   </button>
-                  <button (click)="verPermisos(u)" title="Ver Permisos RBAC"
+                  <button *ngIf="u.tieneUsuario" (click)="verPermisos(u)" title="Ver Permisos RBAC"
                           class="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors">
                     <i class="fa-solid fa-key text-xs"></i>
                   </button>
-                  <button (click)="confirmarEliminar(u)" title="Eliminar Usuario"
+                  <button (click)="confirmarEliminar(u)" title="Eliminar Colaborador"
                           class="p-1.5 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors">
                     <i class="fa-solid fa-trash-can text-xs"></i>
                   </button>
@@ -325,14 +320,18 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Teléfono:</label>
                 <input [(ngModel)]="usuarioEnEdicion.telefono" placeholder="987654321" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200" />
               </div>
               <div>
-                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">N° Colegiatura (CQFP):</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">N° Colegiatura (CQFP / CMP):</label>
                 <input [(ngModel)]="usuarioEnEdicion.nroColegiatura" placeholder="Ej: CQFP 14820" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono font-bold text-purple-700 dark:text-purple-300" />
+              </div>
+              <div>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Fecha de Nacimiento:</label>
+                <input [(ngModel)]="usuarioEnEdicion.fechanacimiento" type="date" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200" />
               </div>
             </div>
 
@@ -342,41 +341,67 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
             </div>
           </div>
 
-          <!-- TAB 2: CUENTA -->
+          <!-- TAB 2: CUENTA & PERFIL -->
           <div *ngIf="tabModal === 'cuenta'" class="space-y-3 text-xs">
-            <div>
-              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Email de Acceso *</label>
-              <input [(ngModel)]="usuarioEnEdicion.email" type="email" placeholder="usuario@medicare.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200" />
-            </div>
-
-            <div>
-              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
-                Contraseña:
-                <span *ngIf="modoEdicion" class="text-slate-400 font-normal">(Dejar en blanco para no cambiarla)</span>
-              </label>
-              <input [(ngModel)]="passwordInput" type="password" placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono text-slate-800 dark:text-slate-200" />
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            
+            <!-- Toggle Switch: Habilitar Cuenta -->
+            <div class="p-3 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800/60 flex items-center justify-between">
               <div>
-                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Perfil / Rol Asignado:</label>
-                <select [(ngModel)]="usuarioEnEdicion.perfilCodigo" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200">
-                  <option value="ADMIN_NEGOCIO">👑 Administrador de Farmacia</option>
-                  <option value="QUIMICO_FARMACEUTICO">💊 Químico Farmacéutico (Q.F.)</option>
-                  <option value="CAJERO_VENDEDOR">🛒 Cajero / Dispensador</option>
-                </select>
+                <p class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <i class="fa-solid fa-shield-halved text-indigo-600 dark:text-indigo-400"></i>
+                  <span>¿Habilitar Cuenta de Acceso (Login)?</span>
+                </p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                  {{ usuarioEnEdicion.tieneUsuario ? 'Este colaborador tendrá credenciales activas para iniciar sesión' : 'Solo se guardará como personal operativo (sin credenciales de inicio de sesión)' }}
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="usuarioEnEdicion.tieneUsuario" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+
+            <!-- Campos de Cuenta si tieneUsuario es true -->
+            <div *ngIf="usuarioEnEdicion.tieneUsuario" class="space-y-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+              <div>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Email de Acceso *</label>
+                <input [(ngModel)]="usuarioEnEdicion.email" type="email" placeholder="usuario@empresa.com" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 font-medium" />
+              </div>
+
+              <div>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                  Contraseña:
+                  <span *ngIf="modoEdicion && usuarioOriginalTieneCuenta" class="text-slate-400 font-normal">(Dejar en blanco para conservar actual)</span>
+                  <span *ngIf="!modoEdicion || !usuarioOriginalTieneCuenta" class="text-indigo-600 dark:text-indigo-400 font-normal">(Obligatorio para nueva cuenta)</span>
+                </label>
+                <input [(ngModel)]="passwordInput" type="password" placeholder="••••••••" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono text-slate-800 dark:text-slate-200" />
               </div>
 
               <div>
                 <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">PIN Supervisor (4 dígitos):</label>
-                <input [(ngModel)]="usuarioEnEdicion.pinSeguridad" type="password" maxlength="6" placeholder="1234" class="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono font-bold text-slate-800 dark:text-slate-200" />
+                <input [(ngModel)]="usuarioEnEdicion.pinSeguridad" type="password" maxlength="6" placeholder="1234" class="w-full text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono font-bold text-slate-800 dark:text-slate-200" />
               </div>
             </div>
 
+            <div *ngIf="!usuarioEnEdicion.tieneUsuario" class="p-3 bg-slate-100 dark:bg-slate-950 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-center text-slate-500">
+              <i class="fa-solid fa-id-badge text-xl mb-1 text-slate-400"></i>
+              <p class="font-bold text-slate-700 dark:text-slate-300">Personal Registrado sin Login</p>
+              <p class="text-[10px] text-slate-400 max-w-sm mx-auto">Este personal aparecerá en el directorio del restaurante y roles operativos. Si desea que ingrese al sistema, active el switch superior.</p>
+            </div>
+
+            <!-- Perfil / Rol Operativo -->
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Cargo / Perfil Asignado:</label>
+              <select [(ngModel)]="usuarioEnEdicion.perfilCodigo" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200">
+                <option *ngFor="let p of perfilesDisponibles" [value]="p.codigo">{{ p.nombre }}</option>
+              </select>
+            </div>
+
+            <!-- Estado de la persona/usuario -->
             <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl flex items-center justify-between border border-slate-200 dark:border-slate-800">
               <div>
-                <p class="font-bold text-slate-800 dark:text-white">Estado de la Cuenta</p>
-                <p class="text-[10px] text-slate-400">Si está inactivo, no podrá ingresar al sistema</p>
+                <p class="font-bold text-slate-800 dark:text-white">Estado del Colaborador</p>
+                <p class="text-[10px] text-slate-400">Si está inactivo, figura como baja o suspendido</p>
               </div>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="usuarioEnEdicion.estaActivo" class="w-4 h-4 rounded text-indigo-600" />
@@ -599,14 +624,20 @@ export class UsuariosEmpresasPageComponent implements OnInit {
     }, 3500);
   }
 
+  usuarioOriginalTieneCuenta = false;
+
   get usuariosFiltrados(): UsuarioMasterDTO[] {
     return this.usuarios.filter(u => {
       const matchTenant = this.filtroTenantId === 'TODOS' || u.negocioId === this.filtroTenantId;
-      const matchRol = this.filtroRol === 'TODOS' || u.perfilCodigo === this.filtroRol;
+      let matchRol = true;
+      if (this.filtroRol === 'CON_USUARIO') matchRol = !!u.tieneUsuario;
+      else if (this.filtroRol === 'SIN_USUARIO') matchRol = !u.tieneUsuario;
+      else if (this.filtroRol !== 'TODOS') matchRol = u.perfilCodigo === this.filtroRol;
+
       const q = this.busqueda.toLowerCase().trim();
       const matchTexto = !q || 
         (u.nombreCompleto && u.nombreCompleto.toLowerCase().includes(q)) ||
-        u.email.toLowerCase().includes(q) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
         (u.numeroDocumento && u.numeroDocumento.includes(q)) ||
         (u.negocioNombre && u.negocioNombre.toLowerCase().includes(q)) ||
         (u.nroColegiatura && u.nroColegiatura.toLowerCase().includes(q));
@@ -614,38 +645,76 @@ export class UsuariosEmpresasPageComponent implements OnInit {
     });
   }
 
+  get totalConUsuario(): number {
+    return this.usuarios.filter(u => u.tieneUsuario).length;
+  }
+
+  get totalSinUsuario(): number {
+    return this.usuarios.filter(u => !u.tieneUsuario).length;
+  }
+
   get totalAdmins(): number {
-    return this.usuarios.filter(u => u.perfilCodigo === 'ADMIN_NEGOCIO').length;
+    return this.usuarios.filter(u => u.perfilCodigo && u.perfilCodigo.toUpperCase().includes('ADMIN')).length;
   }
 
-  get totalQuimicos(): number {
-    return this.usuarios.filter(u => u.perfilCodigo === 'QUIMICO_FARMACEUTICO').length;
+  get perfilesDisponibles(): PerfilDTO[] {
+    if (this.perfiles && this.perfiles.length > 0) {
+      return this.perfiles;
+    }
+    return [
+      { id: '1', codigo: 'ADMIN_NEGOCIO', nombre: 'Administrador de Farmacia', descripcion: '', esSistema: true, estaActivo: true },
+      { id: '2', codigo: 'ADMIN_RESTAURANTE', nombre: 'Administrador de Restaurante', descripcion: '', esSistema: true, estaActivo: true },
+      { id: '3', codigo: 'MOZO_RESTAURANTE', nombre: 'Mozo / Mesero', descripcion: '', esSistema: true, estaActivo: true },
+      { id: '4', codigo: 'COCINERO_RESTAURANTE', nombre: 'Cocinero / Chef', descripcion: '', esSistema: true, estaActivo: true },
+      { id: '5', codigo: 'CAJERO_RESTAURANTE', nombre: 'Cajero de Restaurante', descripcion: '', esSistema: true, estaActivo: true },
+      { id: '6', codigo: 'QUIMICO_FARMACEUTICO', nombre: 'Químico Farmacéutico (Q.F.)', descripcion: '', esSistema: true, estaActivo: true },
+      { id: '7', codigo: 'CAJERO_VENDEDOR', nombre: 'Cajero / Dispensador', descripcion: '', esSistema: true, estaActivo: true }
+    ];
   }
 
-  get totalCajeros(): number {
-    return this.usuarios.filter(u => u.perfilCodigo === 'CAJERO_VENDEDOR').length;
+  getPerfilBadgeClass(codigo?: string): string {
+    const c = (codigo || '').toUpperCase();
+    if (c.includes('ADMIN')) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
+    if (c.includes('MOZO')) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+    if (c.includes('COCIN') || c.includes('CHEF')) return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20';
+    if (c.includes('QUIMIC')) return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20';
+    if (c.includes('CAJER')) return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20';
+    return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20';
+  }
+
+  getPerfilIcon(codigo?: string): string {
+    const c = (codigo || '').toUpperCase();
+    if (c.includes('ADMIN')) return 'fa-crown';
+    if (c.includes('MOZO')) return 'fa-utensils';
+    if (c.includes('COCIN') || c.includes('CHEF')) return 'fa-fire-burner';
+    if (c.includes('QUIMIC')) return 'fa-shield-halved';
+    if (c.includes('CAJER')) return 'fa-cash-register';
+    return 'fa-user';
   }
 
   getUsuarioVacio(): UsuarioMasterDTO {
     return {
-      negocioId: this.tenants[0]?.id || 'a0000000-0000-0000-0000-000000000002',
+      negocioId: this.tenants[0]?.id || 'a0000000-0000-0000-0000-000000000004',
       email: '',
       password: '',
       pinSeguridad: '1234',
       estaActivo: true,
-      perfilCodigo: 'CAJERO_VENDEDOR',
+      tieneUsuario: false,
+      perfilCodigo: 'MOZO_RESTAURANTE',
       tipoDocumento: 'DNI',
       numeroDocumento: '',
       nombres: '',
       apellidos: '',
       telefono: '',
       direccion: '',
-      nroColegiatura: ''
+      nroColegiatura: '',
+      fechanacimiento: ''
     };
   }
 
   abrirModalNuevo() {
     this.modoEdicion = false;
+    this.usuarioOriginalTieneCuenta = false;
     this.usuarioEnEdicion = this.getUsuarioVacio();
     this.passwordInput = '123456';
     this.tabModal = 'persona';
@@ -655,10 +724,13 @@ export class UsuariosEmpresasPageComponent implements OnInit {
 
   abrirModalEditar(u: UsuarioMasterDTO) {
     this.modoEdicion = true;
+    this.usuarioOriginalTieneCuenta = !!u.tieneUsuario;
     this.usuarioEnEdicion = { 
       ...u,
+      tieneUsuario: !!u.tieneUsuario,
       tipoDocumento: u.tipoDocumento || 'DNI',
-      pinSeguridad: u.pinSeguridad || '1234'
+      pinSeguridad: u.pinSeguridad || '1234',
+      fechanacimiento: u.fechanacimiento || ''
     };
     this.passwordInput = '';
     this.tabModal = 'persona';
@@ -693,6 +765,14 @@ export class UsuariosEmpresasPageComponent implements OnInit {
         this.usuarioEnEdicion.apellidos = 'Ramos Salazar';
         this.usuarioEnEdicion.nroColegiatura = 'CQFP 14820';
         this.usuarioEnEdicion.telefono = '976543210';
+      } else if (doc === '75486273') {
+        this.usuarioEnEdicion.nombres = 'Alex';
+        this.usuarioEnEdicion.apellidos = 'Espinoza Diaz';
+        this.usuarioEnEdicion.telefono = '974372084';
+      } else if (doc === '70234501') {
+        this.usuarioEnEdicion.nombres = 'MARIA CLAUDIA';
+        this.usuarioEnEdicion.apellidos = 'FERNANDEZ VILLALOBOS';
+        this.usuarioEnEdicion.telefono = '987000101';
       } else {
         this.usuarioEnEdicion.nombres = 'ROBERTO CARLOS';
         this.usuarioEnEdicion.apellidos = 'GUTIERREZ PAREDES';
@@ -704,8 +784,18 @@ export class UsuariosEmpresasPageComponent implements OnInit {
   }
 
   guardarUsuario() {
-    if (!this.usuarioEnEdicion.email || !this.usuarioEnEdicion.nombres || !this.usuarioEnEdicion.apellidos) {
-      this.mostrarAlerta('error', 'Por favor complete los campos obligatorios: Nombres, Apellidos y Correo.');
+    if (!this.usuarioEnEdicion.nombres || !this.usuarioEnEdicion.apellidos) {
+      this.mostrarAlerta('error', 'Por favor complete los campos obligatorios: Nombres y Apellidos.');
+      return;
+    }
+
+    if (this.usuarioEnEdicion.tieneUsuario && !this.usuarioEnEdicion.email) {
+      this.mostrarAlerta('error', 'El email es obligatorio para habilitar la cuenta de usuario.');
+      return;
+    }
+
+    if (this.usuarioEnEdicion.tieneUsuario && !this.usuarioOriginalTieneCuenta && !this.passwordInput) {
+      this.mostrarAlerta('error', 'Por favor ingrese una contraseña para habilitar la cuenta de usuario.');
       return;
     }
 
@@ -716,31 +806,33 @@ export class UsuariosEmpresasPageComponent implements OnInit {
       this.usuarioEnEdicion.password = this.passwordInput;
     }
 
+    const payload = { ...this.usuarioEnEdicion };
+
     if (this.modoEdicion && this.usuarioEnEdicion.id) {
-      this.rbacService.actualizarUsuario(this.usuarioEnEdicion.id, this.usuarioEnEdicion).subscribe({
+      this.rbacService.actualizarUsuario(this.usuarioEnEdicion.id, payload).subscribe({
         next: () => {
           this.guardando = false;
           this.showModal = false;
-          this.mostrarAlerta('success', 'Usuario actualizado exitosamente en Master DB.');
+          this.mostrarAlerta('success', payload.tieneUsuario ? 'Colaborador y credenciales actualizados exitosamente en Master DB.' : 'Colaborador actualizado exitosamente en Master DB.');
           this.cargarDatos();
         },
         error: () => {
           this.guardando = false;
-          this.mostrarAlerta('error', 'Error al actualizar usuario en Master DB.');
+          this.mostrarAlerta('error', 'Error al actualizar colaborador en Master DB.');
           this.cdr.markForCheck();
         }
       });
     } else {
-      this.rbacService.crearUsuario(this.usuarioEnEdicion).subscribe({
+      this.rbacService.crearUsuario(payload).subscribe({
         next: () => {
           this.guardando = false;
           this.showModal = false;
-          this.mostrarAlerta('success', 'Usuario creado y asignado a empresa exitosamente.');
+          this.mostrarAlerta('success', payload.tieneUsuario ? 'Colaborador con cuenta de acceso registrado exitosamente.' : 'Colaborador registrado exitosamente en Master DB.');
           this.cargarDatos();
         },
         error: () => {
           this.guardando = false;
-          this.mostrarAlerta('error', 'Error al crear usuario en Master DB.');
+          this.mostrarAlerta('error', 'Error al crear colaborador en Master DB.');
           this.cdr.markForCheck();
         }
       });
@@ -762,14 +854,14 @@ export class UsuariosEmpresasPageComponent implements OnInit {
       next: () => {
         this.eliminando = false;
         this.showDeleteModal = false;
-        this.mostrarAlerta('success', `Usuario ${this.usuarioAEliminar?.email} eliminado exitosamente.`);
+        this.mostrarAlerta('success', `Colaborador ${this.usuarioAEliminar?.nombreCompleto || this.usuarioAEliminar?.email} eliminado exitosamente.`);
         this.usuarioAEliminar = null;
         this.cargarDatos();
       },
       error: () => {
         this.eliminando = false;
         this.showDeleteModal = false;
-        this.mostrarAlerta('error', 'No se pudo eliminar el usuario de la base de datos Master.');
+        this.mostrarAlerta('error', 'No se pudo eliminar el colaborador de la base de datos Master.');
         this.cdr.markForCheck();
       }
     });
@@ -781,7 +873,7 @@ export class UsuariosEmpresasPageComponent implements OnInit {
     this.rbacService.cambiarEstado(u.id, nuevoEstado).subscribe({
       next: () => {
         u.estaActivo = nuevoEstado;
-        this.mostrarAlerta('info', `Usuario ${u.email} marcado como ${nuevoEstado ? 'ACTIVO' : 'INACTIVO'}.`);
+        this.mostrarAlerta('info', `Colaborador ${u.nombreCompleto || u.email} marcado como ${nuevoEstado ? 'ACTIVO' : 'INACTIVO'}.`);
         this.cdr.markForCheck();
       }
     });
@@ -795,7 +887,7 @@ export class UsuariosEmpresasPageComponent implements OnInit {
 
   tienePermiso(codigoAccion: string): boolean {
     if (!this.usuarioSeleccionadoPermisos) return false;
-    if (this.usuarioSeleccionadoPermisos.perfilCodigo === 'ADMIN_NEGOCIO') return true;
+    if (this.usuarioSeleccionadoPermisos.perfilCodigo === 'ADMIN_NEGOCIO' || this.usuarioSeleccionadoPermisos.perfilCodigo === 'ADMIN_RESTAURANTE') return true;
     return (this.usuarioSeleccionadoPermisos.acciones || []).includes(codigoAccion);
   }
 }
