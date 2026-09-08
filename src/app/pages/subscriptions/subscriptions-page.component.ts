@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ApiResponse } from '../../core/models/tenant.model';
+import { environment } from '../../../environments/environment';
 
 export interface SubscriptionDTO {
   id?: string;
@@ -528,7 +529,7 @@ export interface TenantSimpleDTO {
 export class SubscriptionsPageComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
-  private apiUrl = 'http://localhost:8081/api/v1';
+  private apiUrl = environment.masterApiUrl;
 
   activeTab: 'suscripciones' | 'planes' = 'suscripciones';
   cargando = false;

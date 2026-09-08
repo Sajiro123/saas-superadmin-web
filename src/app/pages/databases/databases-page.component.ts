@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DatabaseMonitor } from '../../core/models/extra.model';
 import { ApiResponse } from '../../core/models/tenant.model';
+import { environment } from '../../../environments/environment';
 
 interface ConnectionTestResult {
   success: boolean;
@@ -268,7 +269,7 @@ export class DatabasesPageComponent implements OnInit {
 
   loadDatabases(): void {
     this.isLoading.set(true);
-    this.http.get<ApiResponse<DatabaseMonitor[]>>('http://localhost:8081/api/v1/databases').subscribe({
+    this.http.get<ApiResponse<DatabaseMonitor[]>>(`${environment.masterApiUrl}/databases`).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.databases.set(res.data);
@@ -290,7 +291,7 @@ export class DatabasesPageComponent implements OnInit {
     this.testingId.set(db.tenantId);
     this.testAlert.set(null);
 
-    this.http.post<ApiResponse<ConnectionTestResult>>(`http://localhost:8081/api/v1/databases/${db.tenantId}/test-connection`, {}).subscribe({
+    this.http.post<ApiResponse<ConnectionTestResult>>(`${environment.masterApiUrl}/databases/${db.tenantId}/test-connection`, {}).subscribe({
       next: (res) => {
         this.testingId.set(null);
         if (res.success && res.data) {
@@ -338,7 +339,7 @@ export class DatabasesPageComponent implements OnInit {
     if (!current) return;
 
     this.isSaving.set(true);
-    this.http.put<ApiResponse<string>>(`http://localhost:8081/api/v1/databases/${current.tenantId}/credentials`, this.credForm).subscribe({
+    this.http.put<ApiResponse<string>>(`${environment.masterApiUrl}/databases/${current.tenantId}/credentials`, this.credForm).subscribe({
       next: () => {
         this.isSaving.set(false);
         this.editingDb.set(null);

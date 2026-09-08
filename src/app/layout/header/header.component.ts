@@ -21,7 +21,7 @@ import { ThemeService } from '../../core/services/theme.service';
         <!-- API Online status -->
         <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Master API (8081)</span>
+          <span>Master API (Online)</span>
         </div>
 
         <!-- BOTÓN TEMA SOL / LUNA (GRANDE Y VISIBLE) -->

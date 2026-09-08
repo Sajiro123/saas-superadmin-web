@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, catchError, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface UsuarioMasterDTO {
   id?: string;
@@ -60,7 +61,7 @@ export interface AccionDTO {
 })
 export class RbacMasterService {
   private http = inject(HttpClient);
-  private masterApiUrl = 'http://localhost:8081/api/v1';
+  private masterApiUrl = environment.masterApiUrl;
 
   // Fallback data
   public mockTenants: TenantSimpleDTO[] = [

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { TenantService } from '../../core/services/tenant.service';
 import { Tenant, CreateTenantRequest, ApiResponse } from '../../core/models/tenant.model';
+import { environment } from '../../../environments/environment';
 
 export interface PlanSimple {
   id: string;
@@ -485,7 +486,7 @@ export class TenantsPageComponent implements OnInit {
   }
 
   cargarPlanes(): void {
-    this.http.get<ApiResponse<PlanSimple[]>>('http://localhost:8081/api/v1/subscriptions/plans').subscribe({
+    this.http.get<ApiResponse<PlanSimple[]>>(`${environment.masterApiUrl}/subscriptions/plans`).subscribe({
       next: (res) => {
         if (res.data && res.data.length > 0) {
           this.availablePlans.set(res.data);

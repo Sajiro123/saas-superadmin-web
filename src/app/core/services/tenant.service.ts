@@ -2,13 +2,14 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { Tenant, CreateTenantRequest, ApiResponse } from '../models/tenant.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TenantService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/v1/tenants';
+  private apiUrl = `${environment.masterApiUrl}/tenants`;
 
   tenantsSignal = signal<Tenant[]>([]);
 

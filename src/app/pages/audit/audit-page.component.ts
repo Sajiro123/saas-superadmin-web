@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuditLog } from '../../core/models/extra.model';
 import { ApiResponse } from '../../core/models/tenant.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-audit-page',
@@ -93,7 +94,7 @@ export class AuditPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.isLoading.set(true);
-    this.http.get<ApiResponse<AuditLog[]>>('http://localhost:8081/api/v1/audit').subscribe({
+    this.http.get<ApiResponse<AuditLog[]>>(`${environment.masterApiUrl}/audit`).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.auditLogs.set(res.data);
