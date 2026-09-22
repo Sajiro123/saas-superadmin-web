@@ -16,6 +16,16 @@ export interface PlanSimple {
   estaActivo: boolean;
 }
 
+export interface SedeEmpresa {
+  id: string;
+  nombre: string;
+  direccion: string;
+  telefono?: string;
+  encargado?: string;
+  activa: boolean;
+  negocioId?: string;
+}
+
 @Component({
   selector: 'app-tenants-page',
   standalone: true,
@@ -157,6 +167,10 @@ export interface PlanSimple {
                     </div>
                   </td>
                   <td class="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
+                    <button (click)="openSedesModal(t)" title="Gestionar Sedes / Sucursales"
+                            class="p-1.5 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer">
+                      <i class="fa-solid fa-store text-xs"></i>
+                    </button>
                     <button (click)="viewTenantDetail(t)" title="Ver Detalle"
                             class="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer">
                       <i class="fa-solid fa-eye text-xs"></i>
@@ -433,6 +447,200 @@ export interface PlanSimple {
           </div>
         </div>
       </div>
+
+      <!-- Modal: Gestión de Sedes & Sucursales por Empresa (Master Control Plane) -->
+      <div *ngIf="selectedTenantForSedes()" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          
+          <!-- Header -->
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-store"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Sedes & Sucursales: {{ selectedTenantForSedes()?.nombreComercial }}</span>
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  {{ selectedTenantForSedes()?.razonSocial }} • RUC {{ selectedTenantForSedes()?.numeroIdentificacion }}
+                </p>
+              </div>
+            </div>
+            <button (click)="closeSedesModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+
+          <!-- Info y Cuota del Plan -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-slate-600 dark:text-slate-400">Plan Suscrito:</span>
+                <span class="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">
+                  {{ selectedTenantForSedes()?.planNombre || selectedTenantForSedes()?.planId }}
+                </span>
+                <span class="text-slate-400">• Vertical {{ selectedTenantForSedes()?.verticalNombre }}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                <i class="fa-solid fa-circle-nodes text-indigo-500 mr-1"></i>
+                División de información: cada venta POS, arqueo de caja y turno queda registrado con el nombre de su sede.
+              </p>
+            </div>
+
+            <div class="text-left sm:text-right shrink-0">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Cupo de Sedes</span>
+              <div class="flex items-center gap-1.5 font-bold mt-0.5"
+                   [ngClass]="sedesList().length >= getMaxSucursales(selectedTenantForSedes()) ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'">
+                <i class="fa-solid fa-building-circle-check"></i>
+                <span class="text-sm">{{ sedesList().length }}</span>
+                <span class="text-slate-400">/ {{ getMaxSucursales(selectedTenantForSedes()) }} sedes permitidas</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alerta de feedback -->
+          <div *ngIf="sedeFeedback()" class="p-3 rounded-xl text-xs font-semibold flex items-center justify-between"
+               [ngClass]="sedeFeedback()?.tipo === 'success' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20'">
+            <span>{{ sedeFeedback()?.texto }}</span>
+            <button (click)="sedeFeedback.set(null)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <!-- Lista de Sedes -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                Sedes Registradas ({{ sedesList().length }})
+              </h4>
+              <button *ngIf="!showNuevaSedeForm && !editingSede()" (click)="abrirFormNuevaSede()"
+                      [disabled]="sedesList().length >= getMaxSucursales(selectedTenantForSedes())"
+                      class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>Nueva Sede</span>
+              </button>
+            </div>
+
+            <!-- Formulario para Nueva Sede / Editar Sede -->
+            <div *ngIf="showNuevaSedeForm || editingSede()"
+                 class="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 space-y-3 text-xs animate-slide-up">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid" [ngClass]="editingSede() ? 'fa-pen-to-square text-amber-500' : 'fa-plus text-emerald-500'"></i>
+                <span>{{ editingSede() ? 'Editar Sede: ' + editingSede()?.nombre : 'Registrar Nueva Sede' }}</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-400 font-semibold mb-1">Nombre de la Sede *</label>
+                  <input type="text" [(ngModel)]="sedeFormData.nombre" placeholder="Ej: Sucursal Miraflores"
+                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-400 font-semibold mb-1">Dirección Completa *</label>
+                  <input type="text" [(ngModel)]="sedeFormData.direccion" placeholder="Ej: Av. Larco 820, Miraflores"
+                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-400 font-semibold mb-1">Teléfono / Anexo</label>
+                  <input type="text" [(ngModel)]="sedeFormData.telefono" placeholder="Ej: 01-4458920"
+                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-400 font-semibold mb-1">Responsable / Regente</label>
+                  <input type="text" [(ngModel)]="sedeFormData.encargado" placeholder="Ej: Lic. Q.F. Rosa Morales"
+                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-400 font-semibold mb-1">Estado Operativo</label>
+                  <select [(ngModel)]="sedeFormData.activa"
+                          class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500">
+                    <option [ngValue]="true">🟢 Operativa / Activa</option>
+                    <option [ngValue]="false">🟡 En Mantenimiento / Inactiva</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-2">
+                <button type="button" (click)="cancelarFormSede()"
+                        class="px-3.5 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer">
+                  Cancelar
+                </button>
+                <button type="button" (click)="guardarSedeForm()"
+                        class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-sm cursor-pointer">
+                  {{ editingSede() ? 'Guardar Cambios' : 'Registrar Sede' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Tarjetas de Sedes -->
+            <div *ngIf="sedesList().length === 0" class="p-8 text-center text-slate-400 dark:text-slate-600 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl">
+              <i class="fa-solid fa-store-slash text-2xl mb-1"></i>
+              <p>No hay sedes registradas para esta empresa.</p>
+            </div>
+
+            <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+              <div *ngFor="let sede of sedesList(); let idx = index"
+                   class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                <div class="flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                       [ngClass]="sede.activa ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-slate-500/10 text-slate-500'">
+                    <i class="fa-solid fa-store"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-slate-900 dark:text-white text-xs">{{ sede.nombre }}</span>
+                      <span *ngIf="idx === 0" class="text-[9px] bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20 font-bold px-1.5 py-0.5 rounded">
+                        Principal
+                      </span>
+                      <span [ngClass]="sede.activa ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-slate-500/10 text-slate-600 dark:text-slate-400'"
+                            class="text-[9px] font-bold px-1.5 py-0.5 rounded">
+                        {{ sede.activa ? 'Activa' : 'Inactiva' }}
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+                      <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i>
+                      <span>{{ sede.direccion }}</span>
+                    </p>
+                    <div class="flex flex-wrap items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                      <span *ngIf="sede.telefono"><i class="fa-solid fa-phone text-[9px]"></i> {{ sede.telefono }}</span>
+                      <span *ngIf="sede.encargado"><i class="fa-solid fa-user-check text-[9px]"></i> {{ sede.encargado }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Acciones de Sede -->
+                <div class="flex items-center gap-1 self-end sm:self-center shrink-0">
+                  <button (click)="iniciarEdicionSede(sede)" title="Editar datos de sede"
+                          class="p-1.5 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer">
+                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                  </button>
+                  <button (click)="toggleActivaSede(sede)" [title]="sede.activa ? 'Desactivar Sede' : 'Activar Sede'"
+                          class="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer">
+                    <i class="fa-solid" [ngClass]="sede.activa ? 'fa-toggle-on text-emerald-500 text-sm' : 'fa-toggle-off text-slate-400 text-sm'"></i>
+                  </button>
+                  <button (click)="eliminarSede(sede)" title="Eliminar Sede"
+                          [disabled]="sedesList().length <= 1"
+                          class="p-1.5 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-30 cursor-pointer">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <span class="text-[11px] text-slate-400">
+              <i class="fa-solid fa-shield-halved text-indigo-500 mr-1"></i> Control Plane Centralizado
+            </span>
+            <button (click)="closeSedesModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   `
 })
@@ -444,6 +652,21 @@ export class TenantsPageComponent implements OnInit {
   searchTerm = '';
   filterVertical = signal<string>('ALL');
   selectedTenant = signal<Tenant | null>(null);
+
+  // Sedes Management State
+  selectedTenantForSedes = signal<Tenant | null>(null);
+  sedesList = signal<SedeEmpresa[]>([]);
+  editingSede = signal<SedeEmpresa | null>(null);
+  showNuevaSedeForm = false;
+  sedeFormData: SedeEmpresa = {
+    id: '',
+    nombre: '',
+    direccion: '',
+    telefono: '',
+    encargado: '',
+    activa: true
+  };
+  sedeFeedback = signal<{ tipo: 'success' | 'error'; texto: string } | null>(null);
 
   editingTenant = signal<Tenant | null>(null);
   deletingTenant = signal<Tenant | null>(null);
@@ -604,6 +827,218 @@ export class TenantsPageComponent implements OnInit {
         this.isSubmitting.set(false);
         alert(err.error?.message || 'Error al eliminar negocio');
       }
+    });
+  }
+
+  // --- MÉTODOS DE GESTIÓN DE SEDES POR EMPRESA (MASTER CONTROL PLANE) ---
+
+  openSedesModal(t: Tenant): void {
+    this.selectedTenantForSedes.set(t);
+    this.showNuevaSedeForm = false;
+    this.editingSede.set(null);
+    this.sedeFeedback.set(null);
+    this.cargarSedesDeTenant(t);
+  }
+
+  closeSedesModal(): void {
+    this.selectedTenantForSedes.set(null);
+    this.editingSede.set(null);
+    this.showNuevaSedeForm = false;
+    this.sedeFeedback.set(null);
+  }
+
+  getMaxSucursales(t: Tenant | null | undefined): number {
+    if (!t) return 1;
+    const plan = this.availablePlans().find(p => p.id === t.planId);
+    return plan?.maxSucursales || 3;
+  }
+
+  cargarSedesDeTenant(t: Tenant): void {
+    // 1. Cargar desde la API Master central
+    this.http.get<ApiResponse<SedeEmpresa[]>>(`${environment.masterApiUrl}/tenants/${t.id}/sedes`).subscribe({
+      next: (res) => {
+        if (res.data && res.data.length > 0) {
+          this.sedesList.set(res.data);
+          localStorage.setItem('medicare_sedes_tenant_' + t.id, JSON.stringify(res.data));
+          return;
+        }
+        this.fallbackCargarSedesLocal(t);
+      },
+      error: () => this.fallbackCargarSedesLocal(t)
+    });
+  }
+
+  private fallbackCargarSedesLocal(t: Tenant): void {
+    const key = 'medicare_sedes_tenant_' + t.id;
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list) && list.length > 0) {
+          this.sedesList.set(list);
+          return;
+        }
+      } catch (e) {}
+    }
+
+    if (t.verticalId === 'FARMACIA') {
+      const savedFarmacia = localStorage.getItem('medicare_sedes_sucursales');
+      if (savedFarmacia) {
+        try {
+          const list = JSON.parse(savedFarmacia);
+          if (Array.isArray(list) && list.length > 0) {
+            this.sedesList.set(list);
+            return;
+          }
+        } catch (e) {}
+      }
+    }
+
+    const iniciales: SedeEmpresa[] = [];
+    if (t.id === 'a0000000-0000-0000-0000-000000000004' || (t.subdominio && t.subdominio.includes('willy'))) {
+      iniciales.push({
+        id: '44444444-4444-4444-4444-444444444444',
+        nombre: 'Sucursal Manchay - Pachacámac',
+        direccion: 'Av. Víctor Malásquez s/n, Manchay, Pachacámac',
+        telefono: t.telefonoContacto || '974372084',
+        encargado: 'Willy Alexander Espinoza Díaz',
+        activa: true,
+        negocioId: t.id
+      });
+    } else if (t.id === 'a0000000-0000-0000-0000-000000000001' || t.verticalId === 'FARMACIA') {
+      iniciales.push({
+        id: '11111111-1111-1111-1111-111111111111',
+        nombre: 'Sede Cajamarca Central',
+        direccion: 'Av. Central 123, Cajamarca',
+        telefono: t.telefonoContacto || '987654321',
+        encargado: 'Lic. Carlos Alberto Mendoza Ramos (Q.F. Regente)',
+        activa: true,
+        negocioId: t.id
+      });
+    } else {
+      iniciales.push({
+        id: crypto.randomUUID(),
+        nombre: `Sede Principal - ${t.nombreComercial || t.razonSocial}`,
+        direccion: 'Sede Principal',
+        telefono: t.telefonoContacto || '999999999',
+        encargado: 'Administrador General',
+        activa: true,
+        negocioId: t.id
+      });
+    }
+
+    this.sedesList.set(iniciales);
+    this.persistirSedes(t, iniciales);
+  }
+
+  persistirSedes(t: Tenant, list: SedeEmpresa[]): void {
+    localStorage.setItem('medicare_sedes_tenant_' + t.id, JSON.stringify(list));
+    if (t.verticalId === 'FARMACIA') {
+      localStorage.setItem('medicare_sedes_sucursales', JSON.stringify(list));
+    }
+    // Sincronizar en caliente con Master API (disponible para todos los puertos y módulos)
+    this.http.put(`${environment.masterApiUrl}/tenants/${t.id}/sedes`, list).subscribe({
+      error: (err) => console.warn('Aviso sincronizando sedes con Master API:', err)
+    });
+  }
+
+  abrirFormNuevaSede(): void {
+    const t = this.selectedTenantForSedes();
+    if (!t) return;
+    const max = this.getMaxSucursales(t);
+    if (this.sedesList().length >= max) {
+      this.sedeFeedback.set({
+        tipo: 'error',
+        texto: `Límite alcanzado: el plan actual (${t.planNombre || t.planId}) permite un máximo de ${max} sedes.`
+      });
+      return;
+    }
+    this.editingSede.set(null);
+    this.sedeFormData = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('sede-' + Date.now()),
+      nombre: '',
+      direccion: '',
+      telefono: '',
+      encargado: '',
+      activa: true,
+      negocioId: t.id
+    };
+    this.showNuevaSedeForm = true;
+  }
+
+  iniciarEdicionSede(s: SedeEmpresa): void {
+    this.showNuevaSedeForm = false;
+    this.editingSede.set(s);
+    this.sedeFormData = { ...s };
+  }
+
+  cancelarFormSede(): void {
+    this.showNuevaSedeForm = false;
+    this.editingSede.set(null);
+  }
+
+  guardarSedeForm(): void {
+    const t = this.selectedTenantForSedes();
+    if (!t) return;
+
+    if (!this.sedeFormData.nombre.trim() || !this.sedeFormData.direccion.trim()) {
+      alert('El nombre y la dirección de la sede son obligatorios.');
+      return;
+    }
+
+    const currentList = [...this.sedesList()];
+
+    if (this.editingSede()) {
+      const idx = currentList.findIndex(s => s.id === this.sedeFormData.id);
+      if (idx !== -1) {
+        currentList[idx] = { ...this.sedeFormData };
+      }
+      this.sedeFeedback.set({
+        tipo: 'success',
+        texto: `Sede "${this.sedeFormData.nombre}" actualizada con éxito.`
+      });
+    } else {
+      currentList.push({ ...this.sedeFormData });
+      this.sedeFeedback.set({
+        tipo: 'success',
+        texto: `Sede "${this.sedeFormData.nombre}" creada y asignada a ${t.nombreComercial}.`
+      });
+    }
+
+    this.sedesList.set(currentList);
+    this.persistirSedes(t, currentList);
+    this.cancelarFormSede();
+  }
+
+  toggleActivaSede(sede: SedeEmpresa): void {
+    const t = this.selectedTenantForSedes();
+    if (!t) return;
+    const currentList = this.sedesList().map(s => {
+      if (s.id === sede.id) {
+        return { ...s, activa: !s.activa };
+      }
+      return s;
+    });
+    this.sedesList.set(currentList);
+    this.persistirSedes(t, currentList);
+  }
+
+  eliminarSede(sede: SedeEmpresa): void {
+    const t = this.selectedTenantForSedes();
+    if (!t) return;
+    if (this.sedesList().length <= 1) {
+      alert('La empresa debe mantener al menos una sede principal registrada.');
+      return;
+    }
+    if (!confirm(`¿Eliminar definitivamente la sede "${sede.nombre}"?`)) {
+      return;
+    }
+    const currentList = this.sedesList().filter(s => s.id !== sede.id);
+    this.sedesList.set(currentList);
+    this.persistirSedes(t, currentList);
+    this.sedeFeedback.set({
+      tipo: 'success',
+      texto: `Sede "${sede.nombre}" eliminada correctamente.`
     });
   }
 }

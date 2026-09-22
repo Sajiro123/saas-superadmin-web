@@ -1,6 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, AccionDTO } from '../../core/services/rbac-master.service';
 
 @Component({
@@ -10,16 +12,41 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
   template: `
     <div class="space-y-6">
       
-      <!-- Toast Alert -->
+      <!-- Toast Alert (Modern Soft Enterprise Design) -->
       <div *ngIf="mensajeToast" 
+           class="fixed top-20 right-8 z-50 max-w-sm sm:max-w-md w-full p-4 rounded-3xl shadow-xl shadow-slate-900/5 border backdrop-blur-md transition-all duration-300 animate-slide-down flex items-start gap-3.5 bg-white/95 dark:bg-slate-900/95"
            [ngClass]="{
-             'bg-emerald-600 text-white': mensajeToast.tipo === 'success',
-             'bg-rose-600 text-white': mensajeToast.tipo === 'error',
-             'bg-indigo-600 text-white': mensajeToast.tipo === 'info'
-           }"
-           class="fixed top-20 right-8 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold animate-bounce">
-        <i class="fa-solid" [ngClass]="mensajeToast.tipo === 'success' ? 'fa-circle-check' : mensajeToast.tipo === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info'"></i>
-        <span>{{ mensajeToast.texto }}</span>
+             'border-emerald-200/90 dark:border-emerald-800/80 ring-1 ring-emerald-500/15': mensajeToast.tipo === 'success',
+             'border-rose-200/90 dark:border-rose-800/80 ring-1 ring-rose-500/15': mensajeToast.tipo === 'error',
+             'border-indigo-200/90 dark:border-indigo-800/80 ring-1 ring-indigo-500/15': mensajeToast.tipo === 'info'
+           }">
+        
+        <div class="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 text-sm font-bold shadow-2xs border"
+             [ngClass]="{
+               'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400': mensajeToast.tipo === 'success',
+               'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400': mensajeToast.tipo === 'error',
+               'bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400': mensajeToast.tipo === 'info'
+             }">
+          <i class="fa-solid" [ngClass]="mensajeToast.tipo === 'success' ? 'fa-check' : mensajeToast.tipo === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-info'"></i>
+        </div>
+
+        <div class="flex-1 pr-1 pt-0.5">
+          <p class="text-[10px] font-black uppercase tracking-wider mb-0.5"
+             [ngClass]="{
+               'text-emerald-700 dark:text-emerald-400': mensajeToast.tipo === 'success',
+               'text-rose-700 dark:text-rose-400': mensajeToast.tipo === 'error',
+               'text-indigo-700 dark:text-indigo-400': mensajeToast.tipo === 'info'
+             }">
+            {{ mensajeToast.tipo === 'success' ? 'Operación Exitosa' : mensajeToast.tipo === 'error' ? 'Atención' : 'Notificación' }}
+          </p>
+          <p class="text-xs font-medium text-slate-700 dark:text-slate-200 leading-snug">
+            {{ mensajeToast.texto }}
+          </p>
+        </div>
+
+        <button type="button" (click)="mensajeToast = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-6 h-6 rounded-lg flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0 mt-0.5">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
       </div>
 
       <!-- Page Header -->
@@ -129,6 +156,7 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
                 <th class="px-6 py-4">Documento / DNI</th>
                 <th class="px-6 py-4">Acceso Login</th>
                 <th class="px-6 py-4">Cargo / Perfil</th>
+                <th class="px-6 py-4">Sede Asignada</th>
                 <th class="px-6 py-4">Colegiatura / PIN</th>
                 <th class="px-6 py-4 text-center">Estado</th>
                 <th class="px-6 py-4 text-right">Acciones</th>
@@ -136,7 +164,7 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60">
               <tr *ngIf="usuariosFiltrados.length === 0" class="text-center text-slate-500">
-                <td colspan="8" class="px-6 py-12">
+                <td colspan="9" class="px-6 py-12">
                   <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-400 dark:text-slate-600 block"></i>
                   <span class="text-sm font-medium">No se encontraron colaboradores para la empresa o filtro seleccionado.</span>
                 </td>
@@ -197,6 +225,14 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
                   <span class="px-2.5 py-1 rounded-full font-bold text-[10px] inline-flex items-center gap-1.5" [ngClass]="getPerfilBadgeClass(u.perfilCodigo)">
                     <i class="fa-solid text-[9px]" [ngClass]="getPerfilIcon(u.perfilCodigo)"></i>
                     <span>{{ u.perfilNombre || u.perfilCodigo }}</span>
+                  </span>
+                </td>
+
+                <!-- Sede Asignada -->
+                <td class="px-6 py-4">
+                  <span class="px-2.5 py-1 rounded-full font-bold text-[10px] inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    <i class="fa-solid fa-building text-indigo-500 text-[9px]"></i>
+                    <span>{{ u.sedeNombre || 'Sede Cajamarca Central' }}</span>
                   </span>
                 </td>
 
@@ -264,7 +300,7 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
           <!-- Empresa Selector -->
           <div>
             <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1 text-xs">🏢 Empresa / Farmacia Destino *</label>
-            <select [(ngModel)]="usuarioEnEdicion.negocioId" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white">
+            <select [(ngModel)]="usuarioEnEdicion.negocioId" (change)="onTenantChangeInModal()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white">
               <option *ngFor="let t of tenants" [value]="t.id">{{ t.nombreComercial }} ({{ t.subdominio }})</option>
             </select>
           </div>
@@ -296,16 +332,9 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
               </div>
 
               <div class="sm:col-span-2">
-                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">N° Documento:</label>
-                <div class="flex gap-1.5">
-                  <input [(ngModel)]="usuarioEnEdicion.numeroDocumento" placeholder="8 dígitos..."
-                         class="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono font-bold text-slate-800 dark:text-slate-200" />
-                  <button (click)="consultarReniec()" [disabled]="consultandoDni"
-                          class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center gap-1 cursor-pointer">
-                    <i class="fa-solid" [ngClass]="consultandoDni ? 'fa-spinner fa-spin' : 'fa-magnifying-glass'"></i>
-                    <span>RENIEC</span>
-                  </button>
-                </div>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">N° Documento *:</label>
+                <input [(ngModel)]="usuarioEnEdicion.numeroDocumento" placeholder="Número de documento (ej: 8 dígitos para DNI)..."
+                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
               </div>
             </div>
 
@@ -339,6 +368,18 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
               <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Dirección:</label>
               <input [(ngModel)]="usuarioEnEdicion.direccion" placeholder="Av. / Calle / Distrito" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200" />
             </div>
+
+            <!-- Sede / Sucursal Asignada -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+              <label class="block text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
+                <i class="fa-solid fa-building text-indigo-600 dark:text-indigo-400"></i>
+                <span>Sede / Sucursal Asignada *:</span>
+              </label>
+              <select [(ngModel)]="usuarioEnEdicion.sedeId" (change)="onSedeChangeInModal()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200">
+                <option *ngFor="let s of sedesDisponiblesModal" [value]="s.id">{{ s.nombre }} ({{ s.direccion }})</option>
+              </select>
+              <p class="text-[10px] text-slate-400">Sucursal donde prestará servicios y operará este colaborador.</p>
+            </div>
           </div>
 
           <!-- TAB 2: CUENTA & PERFIL -->
@@ -355,23 +396,25 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
                   {{ usuarioEnEdicion.tieneUsuario ? 'Este colaborador tendrá credenciales activas para iniciar sesión' : 'Solo se guardará como personal operativo (sin credenciales de inicio de sesión)' }}
                 </p>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" [(ngModel)]="usuarioEnEdicion.tieneUsuario" class="sr-only peer">
-                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="usuarioEnEdicion.tieneUsuario" class="w-4 h-4 rounded text-indigo-600" />
+                <span class="font-bold" [ngClass]="usuarioEnEdicion.tieneUsuario ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'">
+                  {{ usuarioEnEdicion.tieneUsuario ? 'CON ACCESO' : 'SIN ACCESO' }}
+                </span>
               </label>
             </div>
 
-            <!-- Campos de Cuenta si tieneUsuario es true -->
-            <div *ngIf="usuarioEnEdicion.tieneUsuario" class="space-y-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+            <!-- Email, Password, PIN (Si tiene cuenta) -->
+            <div *ngIf="usuarioEnEdicion.tieneUsuario" class="space-y-3">
               <div>
-                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Email de Acceso *</label>
-                <input [(ngModel)]="usuarioEnEdicion.email" type="email" placeholder="usuario@empresa.com" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 font-medium" />
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Correo Electrónico (Login) *:</label>
+                <input [(ngModel)]="usuarioEnEdicion.email" type="email" placeholder="usuario@empresa.com" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono text-slate-800 dark:text-slate-200" />
               </div>
 
               <div>
                 <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
-                  Contraseña:
-                  <span *ngIf="modoEdicion && usuarioOriginalTieneCuenta" class="text-slate-400 font-normal">(Dejar en blanco para conservar actual)</span>
+                  Contraseña: 
+                  <span *ngIf="modoEdicion && usuarioOriginalTieneCuenta" class="text-slate-400 font-normal">(Dejar en blanco para no cambiarla)</span>
                   <span *ngIf="!modoEdicion || !usuarioOriginalTieneCuenta" class="text-indigo-600 dark:text-indigo-400 font-normal">(Obligatorio para nueva cuenta)</span>
                 </label>
                 <input [(ngModel)]="passwordInput" type="password" placeholder="••••••••" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-mono text-slate-800 dark:text-slate-200" />
@@ -395,6 +438,18 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
               <select [(ngModel)]="usuarioEnEdicion.perfilCodigo" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200">
                 <option *ngFor="let p of perfilesDisponibles" [value]="p.codigo">{{ p.nombre }}</option>
               </select>
+            </div>
+
+            <!-- Sede de Operación / Acceso -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+              <label class="block text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
+                <i class="fa-solid fa-building text-indigo-600 dark:text-indigo-400"></i>
+                <span>Sede de Operación / Acceso *:</span>
+              </label>
+              <select [(ngModel)]="usuarioEnEdicion.sedeId" (change)="onSedeChangeInModal()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200">
+                <option *ngFor="let s of sedesDisponiblesModal" [value]="s.id">{{ s.nombre }} ({{ s.direccion }})</option>
+              </select>
+              <p class="text-[10px] text-slate-400">Sede fija donde se emitirán las operaciones y comprobantes del usuario.</p>
             </div>
 
             <!-- Estado de la persona/usuario -->
@@ -451,87 +506,153 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
         </div>
       </div>
 
-      <!-- MODAL PERMISOS RBAC -->
-      <div *ngIf="showPermisosModal && usuarioSeleccionadoPermisos" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-            <div>
-              <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <i class="fa-solid fa-key text-indigo-600"></i> Matriz de Permisos RBAC
-              </h3>
-              <p class="text-[11px] text-slate-400">Usuario: <strong>{{ usuarioSeleccionadoPermisos.nombreCompleto }}</strong> ({{ usuarioSeleccionadoPermisos.perfilNombre }})</p>
-            </div>
-            <button (click)="showPermisosModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
-          </div>
-
-          <div class="space-y-3 text-xs">
-            <!-- POS -->
-            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
-              <p class="font-black text-emerald-700 dark:text-emerald-400 uppercase text-[10px]">Módulo: Punto de Venta (POS)</p>
-              <div class="space-y-1">
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('POS_VENTA_CREAR')" disabled class="rounded text-indigo-600" />
-                  <span>Emitir Ventas y Cobros Fraccionados</span>
-                </label>
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('POS_TICKET_ANULAR')" disabled class="rounded text-indigo-600" />
-                  <span>Anular Tickets & Autorizar Devolución (Con PIN)</span>
-                </label>
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('POS_ARQUEO_CERRAR')" disabled class="rounded text-indigo-600" />
-                  <span>Cierre de Caja & Arqueo Ciego (Reporte Z)</span>
-                </label>
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('POS_RECETA_VALIDAR')" disabled class="rounded text-indigo-600" />
-                  <span>Validar Recetas Médicas / Psicotrópicos DIGEMID</span>
-                </label>
+      <!-- MODAL PERMISOS RBAC (Dinámica, Interactiva y Personalizable) -->
+      <div *ngIf="showPermisosModal && usuarioSeleccionadoPermisos" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 max-h-[92vh] flex flex-col animate-slide-up">
+          
+          <!-- Header -->
+          <div class="flex items-start justify-between pb-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center text-base">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Matriz de Permisos & Acciones RBAC</span>
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <strong class="text-slate-800 dark:text-slate-200">{{ usuarioSeleccionadoPermisos.nombreCompleto || usuarioSeleccionadoPermisos.email }}</strong>
+                  <span class="text-slate-400 dark:text-slate-600 mx-1">|</span>
+                  <span>{{ usuarioSeleccionadoPermisos.negocioNombre || 'Empresa' }}</span>
+                  <span class="text-slate-400 dark:text-slate-600 mx-1">|</span>
+                  <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ usuarioSeleccionadoPermisos.perfilNombre || usuarioSeleccionadoPermisos.perfilCodigo }}</span>
+                </p>
               </div>
             </div>
 
-            <!-- INVENTARIO & COMPRAS -->
-            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
-              <p class="font-black text-purple-700 dark:text-purple-400 uppercase text-[10px]">Módulo: Inventario & Compras</p>
-              <div class="space-y-1">
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('INVENTARIO_FEFO_VER')" disabled class="rounded text-indigo-600" />
-                  <span>Consultar Lotes & Semáforo FEFO</span>
-                </label>
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('INVENTARIO_BAJAS_EMITIR')" disabled class="rounded text-indigo-600" />
-                  <span>Emitir Actas Oficiales de Baja y Destrucción DIGEMID</span>
-                </label>
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('COMPRAS_FACTURA_REGISTRAR')" disabled class="rounded text-indigo-600" />
-                  <span>Recepcionar Facturas de Droguerías por Cajas</span>
-                </label>
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('COMPRAS_REORDEN_PPR')" disabled class="rounded text-indigo-600" />
-                  <span>Punto de Reorden (PPR) & Órdenes de Compra</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- FINANZAS & SEGURIDAD -->
-            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
-              <p class="font-black text-blue-700 dark:text-blue-400 uppercase text-[10px]">Módulo: Finanzas & Seguridad</p>
-              <div class="space-y-1">
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('DASHBOARD_KPI_FINANZAS')" disabled class="rounded text-indigo-600" />
-                  <span>Ver Utilidades Netas, Costos y Rentabilidad</span>
-                </label>
-                <label class="flex items-center gap-2">
-                  <input type="checkbox" [checked]="tienePermiso('USUARIOS_ADMINISTRAR')" disabled class="rounded text-indigo-600" />
-                  <span>Crear y Editar Usuarios en Base de Datos Master</span>
-                </label>
-              </div>
+            <div class="flex items-center gap-2">
+              <span *ngIf="usuarioSeleccionadoPermisos.tienePermisosPersonalizados" 
+                    class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                <i class="fa-solid fa-wrench mr-1"></i> Personalizado
+              </span>
+              <span *ngIf="!usuarioSeleccionadoPermisos.tienePermisosPersonalizados" 
+                    class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                <i class="fa-solid fa-clone mr-1"></i> Heredado de Perfil
+              </span>
+              <button (click)="showPermisosModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white w-8 h-8 rounded-xl flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+              </button>
             </div>
           </div>
 
-          <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end">
-            <button (click)="showPermisosModal = false" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
-              Cerrar
+          <!-- Quick Action Toolbar -->
+          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-50 dark:bg-slate-950/70 rounded-2xl border border-slate-200/80 dark:border-slate-800 shrink-0 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Acciones rápidas:</span>
+              <button type="button" (click)="marcarTodos(true)"
+                      class="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 hover:border-emerald-300 dark:hover:bg-slate-700 text-[11px] font-semibold cursor-pointer shadow-2xs transition-colors">
+                <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> Marcar Todos
+              </button>
+              <button type="button" (click)="marcarTodos(false)"
+                      class="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-slate-700 text-[11px] font-semibold cursor-pointer shadow-2xs transition-colors">
+                <i class="fa-solid fa-circle-xmark text-rose-600 mr-1"></i> Desmarcar Todos
+              </button>
+            </div>
+
+            <button type="button" (click)="restablecerAPerfil()" [disabled]="guardandoPermisos"
+                    class="px-2.5 py-1 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 text-[11px] font-bold cursor-pointer transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-rotate-left"></i> Restablecer a Perfil Base
             </button>
           </div>
+
+          <!-- Dynamic Modules List (Scrollable) -->
+          <div class="space-y-3.5 overflow-y-auto pr-1 flex-1 text-xs">
+            <div *ngFor="let mod of accionesAgrupadas" class="p-3.5 bg-slate-50/70 dark:bg-slate-950/50 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+              
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs text-indigo-600 dark:text-indigo-400 shadow-2xs">
+                    <i class="fa-solid" [ngClass]="mod.icono"></i>
+                  </div>
+                  <span class="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
+                    {{ mod.titulo }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-mono text-slate-400">
+                    {{ mod.acciones.length }} acción(es)
+                  </span>
+                  <button type="button" (click)="toggleModulo(mod.acciones)"
+                          class="text-[10px] px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer"
+                          [ngClass]="todosHabilitadosEnModulo(mod.acciones) ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'">
+                    {{ todosHabilitadosEnModulo(mod.acciones) ? 'Desmarcar Módulo' : 'Marcar Módulo' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Actions Grid inside Module -->
+              <div class="grid grid-cols-1 gap-2 pt-1">
+                <div *ngFor="let acc of mod.acciones"
+                     (click)="togglePermiso(acc.codigo)"
+                     [ngClass]="tienePermiso(acc.codigo) ? 'bg-white dark:bg-slate-900 border-emerald-400/80 dark:border-emerald-600/60 shadow-2xs' : 'bg-white/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-80'"
+                     class="p-2.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-all select-none">
+                  
+                  <div class="space-y-0.5 flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-slate-800 dark:text-slate-100 text-xs">
+                        {{ acc.nombre }}
+                      </span>
+                      <span class="font-mono text-[9px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                        {{ acc.codigo }}
+                      </span>
+                    </div>
+                    <p *ngIf="acc.descripcion" class="text-[10px] text-slate-400 dark:text-slate-500 leading-tight truncate">
+                      {{ acc.descripcion }}
+                    </p>
+                  </div>
+
+                  <!-- Custom Toggle Switch Indicator -->
+                  <div class="shrink-0 flex items-center gap-2">
+                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full"
+                          [ngClass]="tienePermiso(acc.codigo) ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'">
+                      {{ tienePermiso(acc.codigo) ? 'PERMITIDO' : 'DENEGADO' }}
+                    </span>
+                    <div class="w-10 h-5 rounded-full transition-colors relative flex items-center px-0.5"
+                         [ngClass]="tienePermiso(acc.codigo) ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'">
+                      <div class="w-4 h-4 rounded-full bg-white shadow-xs transform transition-transform"
+                           [ngClass]="tienePermiso(acc.codigo) ? 'translate-x-5' : 'translate-x-0'">
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 shrink-0">
+            <div class="text-[11px] text-slate-500 dark:text-slate-400">
+              Total asignado: <strong class="text-emerald-600 dark:text-emerald-400 font-mono">{{ permisosSeleccionados.size }}</strong> de <span class="font-mono">{{ acciones.length }}</span> acciones habilitadas.
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="showPermisosModal = false"
+                      class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition-colors">
+                Cancelar
+              </button>
+
+              <button type="button" (click)="guardarPermisos()" [disabled]="guardandoPermisos"
+                      class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 cursor-pointer transition-all">
+                <i *ngIf="guardandoPermisos" class="fa-solid fa-spinner fa-spin"></i>
+                <i *ngIf="!guardandoPermisos" class="fa-solid fa-check"></i>
+                <span>{{ guardandoPermisos ? 'Guardando...' : 'Guardar Permisos RBAC' }}</span>
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -540,12 +661,14 @@ import { RbacMasterService, UsuarioMasterDTO, TenantSimpleDTO, PerfilDTO, Accion
 })
 export class UsuariosEmpresasPageComponent implements OnInit {
   private rbacService = inject(RbacMasterService);
+  private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
 
   tenants: TenantSimpleDTO[] = [];
   usuarios: UsuarioMasterDTO[] = [];
   perfiles: PerfilDTO[] = [];
   acciones: AccionDTO[] = [];
+  sedesDisponiblesModal: any[] = [];
 
   filtroTenantId = 'TODOS';
   filtroRol = 'TODOS';
@@ -569,10 +692,10 @@ export class UsuariosEmpresasPageComponent implements OnInit {
 
   showPermisosModal = false;
   usuarioSeleccionadoPermisos: UsuarioMasterDTO | null = null;
+  permisosSeleccionados = new Set<string>();
+  guardandoPermisos = false;
 
   ngOnInit() {
-    this.tenants = [...this.rbacService.mockTenants];
-    this.usuarios = [...this.rbacService.mockUsuarios];
     this.cargarDatos();
   }
 
@@ -712,12 +835,61 @@ export class UsuariosEmpresasPageComponent implements OnInit {
     };
   }
 
+  cargarSedesTenant(tenantId?: string) {
+    if (!tenantId) return;
+    this.http.get<any>(`${environment.masterApiUrl}/tenants/${tenantId}/sedes`).subscribe({
+      next: (res) => {
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+          this.sedesDisponiblesModal = res.data;
+          if (!this.usuarioEnEdicion.sedeId) {
+            this.usuarioEnEdicion.sedeId = res.data[0].id;
+            this.usuarioEnEdicion.sedeNombre = res.data[0].nombre;
+          }
+        } else {
+          this.asignarSedesFallback(tenantId);
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.asignarSedesFallback(tenantId);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private asignarSedesFallback(tenantId?: string) {
+    const isWilly = tenantId === 'a0000000-0000-0000-0000-000000000004';
+    this.sedesDisponiblesModal = [
+      isWilly
+        ? { id: '44444444-4444-4444-4444-444444444444', nombre: 'Sucursal Manchay - Pachacámac', direccion: 'Av. Víctor Malásquez s/n' }
+        : { id: '11111111-1111-1111-1111-111111111111', nombre: 'Sede Cajamarca Central', direccion: 'Av. Central 123' }
+    ];
+    if (!this.usuarioEnEdicion.sedeId) {
+      this.usuarioEnEdicion.sedeId = this.sedesDisponiblesModal[0].id;
+      this.usuarioEnEdicion.sedeNombre = this.sedesDisponiblesModal[0].nombre;
+    }
+  }
+
+  onSedeChangeInModal() {
+    const found = this.sedesDisponiblesModal.find(s => s.id === this.usuarioEnEdicion.sedeId);
+    if (found) {
+      this.usuarioEnEdicion.sedeNombre = found.nombre;
+    }
+  }
+
+  onTenantChangeInModal() {
+    this.usuarioEnEdicion.sedeId = '';
+    this.usuarioEnEdicion.sedeNombre = '';
+    this.cargarSedesTenant(this.usuarioEnEdicion.negocioId);
+  }
+
   abrirModalNuevo() {
     this.modoEdicion = false;
     this.usuarioOriginalTieneCuenta = false;
     this.usuarioEnEdicion = this.getUsuarioVacio();
     this.passwordInput = '123456';
     this.tabModal = 'persona';
+    this.cargarSedesTenant(this.usuarioEnEdicion.negocioId);
     this.showModal = true;
     this.cdr.markForCheck();
   }
@@ -730,10 +902,13 @@ export class UsuariosEmpresasPageComponent implements OnInit {
       tieneUsuario: !!u.tieneUsuario,
       tipoDocumento: u.tipoDocumento || 'DNI',
       pinSeguridad: u.pinSeguridad || '1234',
-      fechanacimiento: u.fechanacimiento || ''
+      fechanacimiento: u.fechanacimiento || '',
+      sedeId: u.sedeId || '',
+      sedeNombre: u.sedeNombre || ''
     };
     this.passwordInput = '';
     this.tabModal = 'persona';
+    this.cargarSedesTenant(u.negocioId);
     this.showModal = true;
     this.cdr.markForCheck();
   }
@@ -742,45 +917,6 @@ export class UsuariosEmpresasPageComponent implements OnInit {
     if (!id) return;
     this.mostrarPins[id] = !this.mostrarPins[id];
     this.cdr.markForCheck();
-  }
-
-  consultarReniec() {
-    const doc = this.usuarioEnEdicion.numeroDocumento?.trim();
-    if (!doc || doc.length !== 8) {
-      this.mostrarAlerta('error', 'Ingresa un DNI válido de 8 dígitos.');
-      return;
-    }
-
-    this.consultandoDni = true;
-    this.cdr.markForCheck();
-
-    setTimeout(() => {
-      this.consultandoDni = false;
-      if (doc === '45892018') {
-        this.usuarioEnEdicion.nombres = 'Carlos Alberto';
-        this.usuarioEnEdicion.apellidos = 'Mendoza Ramos';
-        this.usuarioEnEdicion.telefono = '987654321';
-      } else if (doc === '41908234') {
-        this.usuarioEnEdicion.nombres = 'Elena';
-        this.usuarioEnEdicion.apellidos = 'Ramos Salazar';
-        this.usuarioEnEdicion.nroColegiatura = 'CQFP 14820';
-        this.usuarioEnEdicion.telefono = '976543210';
-      } else if (doc === '75486273') {
-        this.usuarioEnEdicion.nombres = 'Alex';
-        this.usuarioEnEdicion.apellidos = 'Espinoza Diaz';
-        this.usuarioEnEdicion.telefono = '974372084';
-      } else if (doc === '70234501') {
-        this.usuarioEnEdicion.nombres = 'MARIA CLAUDIA';
-        this.usuarioEnEdicion.apellidos = 'FERNANDEZ VILLALOBOS';
-        this.usuarioEnEdicion.telefono = '987000101';
-      } else {
-        this.usuarioEnEdicion.nombres = 'ROBERTO CARLOS';
-        this.usuarioEnEdicion.apellidos = 'GUTIERREZ PAREDES';
-        this.usuarioEnEdicion.telefono = '984567123';
-      }
-      this.mostrarAlerta('success', 'Datos RENIEC autocompletados correctamente.');
-      this.cdr.markForCheck();
-    }, 300);
   }
 
   guardarUsuario() {
@@ -879,15 +1015,174 @@ export class UsuariosEmpresasPageComponent implements OnInit {
     });
   }
 
+  get accionesAgrupadas(): { modulo: string; titulo: string; icono: string; color: string; acciones: AccionDTO[] }[] {
+    const ordenModulos = ['POS', 'INVENTARIO', 'COMPRAS', 'DASHBOARD', 'SEGURIDAD'];
+    const metaModulos: Record<string, { titulo: string; icono: string; color: string }> = {
+      'POS': {
+        titulo: 'Punto de Venta (POS) & Caja',
+        icono: 'fa-cash-register',
+        color: 'emerald'
+      },
+      'INVENTARIO': {
+        titulo: 'Inventario, Lotes & DIGEMID (FEFO)',
+        icono: 'fa-boxes-stacked',
+        color: 'purple'
+      },
+      'COMPRAS': {
+        titulo: 'Compras & Cuentas por Pagar (CxP)',
+        icono: 'fa-truck-ramp-box',
+        color: 'blue'
+      },
+      'DASHBOARD': {
+        titulo: 'Finanzas, Reportes & Rentabilidad',
+        icono: 'fa-chart-line',
+        color: 'amber'
+      },
+      'SEGURIDAD': {
+        titulo: 'Seguridad, Usuarios & Roles',
+        icono: 'fa-shield-halved',
+        color: 'indigo'
+      }
+    };
+
+    const agrupado: Record<string, AccionDTO[]> = {};
+    for (const acc of this.acciones) {
+      const mod = acc.modulo || 'OTROS';
+      if (!agrupado[mod]) agrupado[mod] = [];
+      agrupado[mod].push(acc);
+    }
+
+    const resultado: { modulo: string; titulo: string; icono: string; color: string; acciones: AccionDTO[] }[] = [];
+
+    for (const m of ordenModulos) {
+      if (agrupado[m] && agrupado[m].length > 0) {
+        resultado.push({
+          modulo: m,
+          titulo: metaModulos[m].titulo,
+          icono: metaModulos[m].icono,
+          color: metaModulos[m].color,
+          acciones: agrupado[m]
+        });
+      }
+    }
+
+    for (const m of Object.keys(agrupado)) {
+      if (!ordenModulos.includes(m)) {
+        resultado.push({
+          modulo: m,
+          titulo: `Módulo: ${m}`,
+          icono: 'fa-folder',
+          color: 'slate',
+          acciones: agrupado[m]
+        });
+      }
+    }
+
+    return resultado;
+  }
+
   verPermisos(u: UsuarioMasterDTO) {
     this.usuarioSeleccionadoPermisos = u;
+    this.permisosSeleccionados = new Set<string>(u.acciones || []);
     this.showPermisosModal = true;
     this.cdr.markForCheck();
   }
 
   tienePermiso(codigoAccion: string): boolean {
-    if (!this.usuarioSeleccionadoPermisos) return false;
-    if (this.usuarioSeleccionadoPermisos.perfilCodigo === 'ADMIN_NEGOCIO' || this.usuarioSeleccionadoPermisos.perfilCodigo === 'ADMIN_RESTAURANTE') return true;
-    return (this.usuarioSeleccionadoPermisos.acciones || []).includes(codigoAccion);
+    return this.permisosSeleccionados.has(codigoAccion);
+  }
+
+  togglePermiso(codigoAccion: string) {
+    if (this.permisosSeleccionados.has(codigoAccion)) {
+      this.permisosSeleccionados.delete(codigoAccion);
+    } else {
+      this.permisosSeleccionados.add(codigoAccion);
+    }
+    this.cdr.markForCheck();
+  }
+
+  todosHabilitadosEnModulo(acciones: AccionDTO[]): boolean {
+    if (!acciones || acciones.length === 0) return false;
+    return acciones.every(a => this.permisosSeleccionados.has(a.codigo));
+  }
+
+  algunoHabilitadoEnModulo(acciones: AccionDTO[]): boolean {
+    if (!acciones || acciones.length === 0) return false;
+    return acciones.some(a => this.permisosSeleccionados.has(a.codigo));
+  }
+
+  toggleModulo(acciones: AccionDTO[]) {
+    const todos = this.todosHabilitadosEnModulo(acciones);
+    if (todos) {
+      acciones.forEach(a => this.permisosSeleccionados.delete(a.codigo));
+    } else {
+      acciones.forEach(a => this.permisosSeleccionados.add(a.codigo));
+    }
+    this.cdr.markForCheck();
+  }
+
+  marcarTodos(habilitar: boolean) {
+    if (habilitar) {
+      this.acciones.forEach(a => this.permisosSeleccionados.add(a.codigo));
+    } else {
+      this.permisosSeleccionados.clear();
+    }
+    this.cdr.markForCheck();
+  }
+
+  restablecerAPerfil() {
+    if (!this.usuarioSeleccionadoPermisos?.id) return;
+    this.guardandoPermisos = true;
+    this.cdr.markForCheck();
+
+    this.rbacService.actualizarAccionesUsuario(this.usuarioSeleccionadoPermisos.id, [], true).subscribe({
+      next: (res) => {
+        this.guardandoPermisos = false;
+        const resData = res?.data;
+        const nuevasAcciones = resData?.acciones || [];
+        if (this.usuarioSeleccionadoPermisos) {
+          this.usuarioSeleccionadoPermisos.acciones = nuevasAcciones;
+          this.usuarioSeleccionadoPermisos.tienePermisosPersonalizados = false;
+          this.permisosSeleccionados = new Set<string>(nuevasAcciones);
+        }
+        this.mostrarAlerta('success', 'Permisos restablecidos a los valores por defecto del perfil.');
+        this.cargarDatos();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.guardandoPermisos = false;
+        this.mostrarAlerta('error', 'Error al restablecer permisos.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  guardarPermisos() {
+    if (!this.usuarioSeleccionadoPermisos?.id) return;
+    this.guardandoPermisos = true;
+    this.cdr.markForCheck();
+
+    const accionesArray = Array.from(this.permisosSeleccionados);
+
+    this.rbacService.actualizarAccionesUsuario(this.usuarioSeleccionadoPermisos.id, accionesArray, false).subscribe({
+      next: (res) => {
+        this.guardandoPermisos = false;
+        const resData = res?.data;
+        const accionesFinales = resData?.acciones || accionesArray;
+        if (this.usuarioSeleccionadoPermisos) {
+          this.usuarioSeleccionadoPermisos.acciones = accionesFinales;
+          this.usuarioSeleccionadoPermisos.tienePermisosPersonalizados = true;
+        }
+        this.mostrarAlerta('success', 'Matriz de permisos RBAC guardada con éxito.');
+        this.showPermisosModal = false;
+        this.cargarDatos();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.guardandoPermisos = false;
+        this.mostrarAlerta('error', 'Error al guardar los permisos en Master DB.');
+        this.cdr.markForCheck();
+      }
+    });
   }
 }
