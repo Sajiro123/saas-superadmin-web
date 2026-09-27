@@ -12,6 +12,7 @@ export interface Tenant {
   emailContacto: string;
   telefonoContacto?: string;
   dbHost?: string;
+  logoUrl?: string;
   creadoEn: string;
 }
 
@@ -24,6 +25,7 @@ export interface CreateTenantRequest {
   planId: string;
   emailContacto: string;
   telefonoContacto?: string;
+  logoUrl?: string;
   dbHost?: string;
   dbPort?: number;
   dbPassword?: string;

@@ -121,8 +121,23 @@ export interface SedeEmpresa {
               <ng-container *ngIf="!isLoading()">
                 <tr *ngFor="let t of filteredTenants()" class="hover:bg-slate-100/60 dark:hover:bg-slate-800/30 transition-colors">
                   <td class="px-6 py-4">
-                    <div class="font-bold text-slate-900 dark:text-white">{{ t.nombreComercial }}</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">{{ t.razonSocial }} • RUC: {{ t.numeroIdentificacion }}</div>
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-xs cursor-pointer"
+                           (click)="t.logoUrl ? openLogoPreviewModal(t.logoUrl, t.nombreComercial) : null"
+                           [title]="t.logoUrl ? 'Clic para previsualizar logo' : ''">
+                        <img *ngIf="t.logoUrl" [src]="t.logoUrl" [alt]="t.nombreComercial" class="w-full h-full object-contain p-1" />
+                        <i *ngIf="!t.logoUrl" class="fa-solid fa-building text-slate-400 text-sm"></i>
+                      </div>
+                      <div>
+                        <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <span>{{ t.nombreComercial }}</span>
+                          <span *ngIf="t.logoUrl" class="text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1 py-0.2 rounded font-semibold">
+                            Logo
+                          </span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400">{{ t.razonSocial }} • RUC: {{ t.numeroIdentificacion }}</div>
+                      </div>
+                    </div>
                   </td>
                   <td class="px-6 py-4">
                     <span [ngClass]="{
@@ -195,10 +210,19 @@ export interface SedeEmpresa {
       <div *ngIf="selectedTenant()" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <i class="fa-solid fa-building text-indigo-600 dark:text-indigo-400"></i>
-              <span>{{ selectedTenant()?.nombreComercial }}</span>
-            </h3>
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-xs cursor-pointer"
+                   (click)="selectedTenant()?.logoUrl ? openLogoPreviewModal(selectedTenant()?.logoUrl, selectedTenant()?.nombreComercial) : null">
+                <img *ngIf="selectedTenant()?.logoUrl" [src]="selectedTenant()?.logoUrl" [alt]="selectedTenant()?.nombreComercial" class="w-full h-full object-contain p-1" />
+                <i *ngIf="!selectedTenant()?.logoUrl" class="fa-solid fa-building text-indigo-600 dark:text-indigo-400 text-lg"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{{ selectedTenant()?.nombreComercial }}</span>
+                </h3>
+                <p class="text-[11px] text-slate-400 font-mono">{{ selectedTenant()?.subdominio }}.tusistema.com</p>
+              </div>
+            </div>
             <button (click)="selectedTenant.set(null)" class="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
               <i class="fa-solid fa-xmark"></i>
             </button>
@@ -244,6 +268,63 @@ export interface SedeEmpresa {
           </div>
 
           <form (ngSubmit)="saveEditTenant()" class="space-y-3.5 text-xs">
+            <!-- SECCIÓN: LOGO DEL NEGOCIO (SUBIR, PREVISUALIZAR Y EDITAR) -->
+            <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="block text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5">
+                  <i class="fa-solid fa-image text-amber-500"></i>
+                  <span>Logo de la Empresa / Negocio</span>
+                </label>
+                <span *ngIf="editForm.logoUrl" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-circle-check"></i> Logo asignado
+                </span>
+              </div>
+
+              <!-- Vista previa si existe logo -->
+              <div *ngIf="editForm.logoUrl" class="flex items-center gap-4 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div class="relative group cursor-pointer shrink-0" (click)="openLogoPreviewModal(editForm.logoUrl, editForm.nombreComercial)">
+                  <img [src]="editForm.logoUrl" alt="Logo Negocio" 
+                       class="w-16 h-16 object-contain rounded-xl border border-slate-200 dark:border-slate-700 p-1 bg-white transition-transform group-hover:scale-105" />
+                  <div class="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i class="fa-solid fa-magnifying-glass-plus text-white text-xs"></i>
+                  </div>
+                </div>
+
+                <div class="flex-1 space-y-1.5 min-w-0">
+                  <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
+                    {{ editForm.nombreComercial || 'Logo del negocio' }}
+                  </div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <button type="button" (click)="editLogoFileInput.click()" 
+                            class="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer">
+                      <i class="fa-solid fa-arrow-up-from-bracket text-[9px]"></i> Cambiar
+                    </button>
+                    <button type="button" (click)="openLogoPreviewModal(editForm.logoUrl, editForm.nombreComercial)" 
+                            class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer">
+                      <i class="fa-solid fa-eye text-[9px]"></i> Previsualizar
+                    </button>
+                    <button type="button" (click)="removeEditLogo()" 
+                            class="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer">
+                      <i class="fa-solid fa-trash text-[9px]"></i> Quitar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dropzone si NO hay logo -->
+              <div *ngIf="!editForm.logoUrl" 
+                   (click)="editLogoFileInput.click()"
+                   class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-500 rounded-2xl p-4 text-center cursor-pointer transition-colors bg-white/60 dark:bg-slate-900/40 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 group">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-2 transition-transform group-hover:scale-110 shadow-xs">
+                  <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                </div>
+                <p class="text-xs font-bold text-slate-800 dark:text-white">Subir Logo del Negocio</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">Haz clic para seleccionar (PNG, JPG, SVG o WebP)</p>
+              </div>
+
+              <input type="file" #editLogoFileInput (change)="onLogoFileSelected($event, 'edit')" accept="image/*" class="hidden" />
+            </div>
+
             <div>
               <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nombre Comercial *</label>
               <input type="text" [(ngModel)]="editForm.nombreComercial" name="nombreComercial" required
@@ -338,6 +419,44 @@ export interface SedeEmpresa {
           </div>
 
           <form (ngSubmit)="saveCreateTenant()" class="space-y-3.5 text-xs">
+            <!-- SECCIÓN: LOGO DEL NEGOCIO (CREAR) -->
+            <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="block text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5">
+                  <i class="fa-solid fa-image text-indigo-500"></i>
+                  <span>Logo de la Empresa (Opcional)</span>
+                </label>
+                <span *ngIf="newTenantForm.logoUrl" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-circle-check"></i> Logo cargado
+                </span>
+              </div>
+
+              <!-- Vista previa si existe logo -->
+              <div *ngIf="newTenantForm.logoUrl" class="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <img [src]="newTenantForm.logoUrl" alt="Logo" class="w-12 h-12 object-contain rounded-lg border border-slate-200 dark:border-slate-700 p-1 bg-white" />
+                <div class="flex items-center gap-2">
+                  <button type="button" (click)="newLogoFileInput.click()" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-[10px] font-bold cursor-pointer">
+                    Cambiar
+                  </button>
+                  <button type="button" (click)="removeCreateLogo()" class="px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 text-[10px] font-bold cursor-pointer">
+                    Quitar
+                  </button>
+                </div>
+              </div>
+
+              <!-- Dropzone si NO hay logo -->
+              <div *ngIf="!newTenantForm.logoUrl" 
+                   (click)="newLogoFileInput.click()"
+                   class="border border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 rounded-xl p-3 text-center cursor-pointer transition-colors bg-white/60 dark:bg-slate-900/40 hover:bg-indigo-50/30">
+                <p class="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                  <i class="fa-solid fa-cloud-arrow-up mr-1 text-indigo-500"></i> Subir logo de la empresa
+                </p>
+                <p class="text-[9px] text-slate-400">PNG, JPG, SVG o WebP</p>
+              </div>
+
+              <input type="file" #newLogoFileInput (change)="onLogoFileSelected($event, 'create')" accept="image/*" class="hidden" />
+            </div>
+
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nombre Comercial *</label>
@@ -641,6 +760,46 @@ export interface SedeEmpresa {
           </div>
         </div>
       </div>
+
+      <!-- Modal: Previsualización de Logo en Alta Resolución -->
+      <div *ngIf="previewingLogo()" class="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-60 animate-fade-in">
+        <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-eye text-indigo-500"></i>
+              <span>Previsualización: {{ previewingLogo()?.businessName }}</span>
+            </h3>
+            <button (click)="previewingLogo.set(null)" class="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <!-- Modo Fondo Claro -->
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fondo Claro</span>
+              <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center min-h-[120px]">
+                <img [src]="previewingLogo()?.url" alt="Logo Preview Light" class="max-h-28 max-w-full object-contain drop-shadow-xs" />
+              </div>
+            </div>
+
+            <!-- Modo Fondo Oscuro -->
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fondo Oscuro</span>
+              <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center min-h-[120px]">
+                <img [src]="previewingLogo()?.url" alt="Logo Preview Dark" class="max-h-28 max-w-full object-contain drop-shadow-xs" />
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+            <button (click)="previewingLogo.set(null)" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   `
 })
@@ -672,6 +831,7 @@ export class TenantsPageComponent implements OnInit {
   deletingTenant = signal<Tenant | null>(null);
   isSubmitting = signal<boolean>(false);
   showCreateModal = false;
+  previewingLogo = signal<{ url: string; businessName: string } | null>(null);
 
   availablePlans = signal<PlanSimple[]>([]);
 
@@ -684,7 +844,8 @@ export class TenantsPageComponent implements OnInit {
     emailContacto: '',
     telefonoContacto: '',
     estado: 'ACTIVO',
-    dbHost: ''
+    dbHost: '',
+    logoUrl: ''
   };
 
   newTenantForm = {
@@ -696,7 +857,8 @@ export class TenantsPageComponent implements OnInit {
     planId: 'PLAN_ELEMENTAL_FARMACIA',
     emailContacto: '',
     telefonoContacto: '',
-    dbHost: ''
+    dbHost: '',
+    logoUrl: ''
   };
 
   ngOnInit(): void {
@@ -747,7 +909,8 @@ export class TenantsPageComponent implements OnInit {
       emailContacto: t.emailContacto,
       telefonoContacto: t.telefonoContacto || '',
       estado: t.estado,
-      dbHost: t.dbHost || ''
+      dbHost: t.dbHost || '',
+      logoUrl: t.logoUrl || ''
     };
   }
 
@@ -778,9 +941,90 @@ export class TenantsPageComponent implements OnInit {
       planId: this.availablePlans()[0]?.id || 'PLAN_ELEMENTAL_FARMACIA',
       emailContacto: '',
       telefonoContacto: '',
-      dbHost: ''
+      dbHost: '',
+      logoUrl: ''
     };
     this.showCreateModal = true;
+  }
+
+  onLogoFileSelected(event: Event, target: 'edit' | 'create'): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor selecciona un archivo de imagen válido (PNG, JPG, SVG o WebP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no debe superar los 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const img = new Image();
+      img.onload = () => {
+        // Redimensionar automáticamente con canvas para optimizar almacenamiento (máx 512px)
+        const canvas = document.createElement('canvas');
+        const maxDim = 512;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/png', 0.9);
+          if (target === 'edit') {
+            this.editForm.logoUrl = compressed;
+          } else {
+            this.newTenantForm.logoUrl = compressed;
+          }
+        } else {
+          if (target === 'edit') {
+            this.editForm.logoUrl = e.target.result;
+          } else {
+            this.newTenantForm.logoUrl = e.target.result;
+          }
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  removeEditLogo(): void {
+    this.editForm.logoUrl = '';
+  }
+
+  removeCreateLogo(): void {
+    this.newTenantForm.logoUrl = '';
+  }
+
+  openLogoPreviewModal(url?: string, businessName?: string): void {
+    if (!url) return;
+    this.previewingLogo.set({
+      url,
+      businessName: businessName || 'Negocio'
+    });
+  }
+
+  closeLogoPreviewModal(): void {
+    this.previewingLogo.set(null);
   }
 
   autoGenerarSubdominio(): void {
