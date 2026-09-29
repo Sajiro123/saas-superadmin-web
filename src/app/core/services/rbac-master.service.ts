@@ -32,6 +32,14 @@ export interface UsuarioMasterDTO {
   sedeNombre?: string;
 }
 
+export interface SedeSimpleDTO {
+  id: string;
+  nombre: string;
+  direccion?: string;
+  telefono?: string;
+  activa?: boolean;
+}
+
 export interface TenantSimpleDTO {
   id: string;
   nombreComercial: string;
@@ -157,5 +165,58 @@ export class RbacMasterService {
   consultarDni(dni: string): Observable<any> {
     const doc = dni ? dni.trim() : '';
     return this.http.get<any>(`${this.decolectaUrl}/reniec/dni?numero=${doc}&token=${this.decolectaToken}`);
+  }
+
+  listarSedesTenant(tenantId?: string): Observable<SedeSimpleDTO[]> {
+    if (!tenantId) return of([]);
+
+    const isFarmacia = tenantId === 'a0000000-0000-0000-0000-000000000001';
+    const isWilly = tenantId === 'a0000000-0000-0000-0000-000000000004';
+
+    // Para Farmacia: consultar directamente la base de datos Supabase de Farmacia
+    if (isFarmacia) {
+      const supabaseUrl = 'https://nsrqkzgjouggdzxpxybp.supabase.co';
+      const supabaseKey = 'sb_publishable_ImWQQbBmqMzGWw1t-9Z3AA_flpMw8Fe';
+      const headers = {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`
+      };
+
+      return this.http.get<any[]>(`${supabaseUrl}/rest/v1/sucursales?select=*&esta_activo=eq.true&order=es_principal.desc`, { headers }).pipe(
+        map(items => {
+          if (Array.isArray(items) && items.length > 0) {
+            return items.map(s => ({
+              id: s.id,
+              nombre: s.nombre,
+              direccion: s.direccion || '',
+              telefono: s.telefono || '',
+              activa: s.esta_activo ?? true
+            }));
+          }
+          return [
+            { id: '11111111-1111-1111-1111-111111111111', nombre: 'Medicare Farmacia', direccion: 'Av. Central 123, Cajamarca', activa: true },
+            { id: '45fca103-2669-48b8-8a1c-7e5380da5e1f', nombre: 'D Kelly Store', direccion: 'Av.Jiron Apurimac 1168', activa: true }
+          ];
+        }),
+        catchError(() => of([
+          { id: '11111111-1111-1111-1111-111111111111', nombre: 'Medicare Farmacia', direccion: 'Av. Central 123, Cajamarca', activa: true },
+          { id: '45fca103-2669-48b8-8a1c-7e5380da5e1f', nombre: 'D Kelly Store', direccion: 'Av.Jiron Apurimac 1168', activa: true }
+        ]))
+      );
+    }
+
+    if (isWilly) {
+      return of([
+        { id: '44444444-4444-4444-4444-444444444444', nombre: 'Sucursal Manchay - Pachacámac', direccion: 'Av. Víctor Malásquez s/n', activa: true }
+      ]);
+    }
+
+    // Para cualquier otro tenant intentar endpoint o fallback genérico
+    return this.http.get<any>(`${this.masterApiUrl}/tenants/${tenantId}/sedes`).pipe(
+      map(res => (res && res.data && Array.isArray(res.data)) ? res.data : []),
+      catchError(() => of([
+        { id: '11111111-1111-1111-1111-111111111111', nombre: 'Sede Principal', direccion: 'Sede Principal', activa: true }
+      ]))
+    );
   }
 }

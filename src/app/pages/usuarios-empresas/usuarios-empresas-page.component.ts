@@ -837,22 +837,27 @@ export class UsuariosEmpresasPageComponent implements OnInit {
 
   cargarSedesTenant(tenantId?: string) {
     if (!tenantId) return;
-    this.http.get<any>(`${environment.masterApiUrl}/tenants/${tenantId}/sedes`).subscribe({
-      next: (res) => {
-        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
-          this.sedesDisponiblesModal = res.data;
-          if (!this.usuarioEnEdicion.sedeId) {
-            this.usuarioEnEdicion.sedeId = res.data[0].id;
-            this.usuarioEnEdicion.sedeNombre = res.data[0].nombre;
+    this.rbacService.listarSedesTenant(tenantId).subscribe({
+      next: (sedes) => {
+        if (sedes && Array.isArray(sedes) && sedes.length > 0) {
+          this.sedesDisponiblesModal = sedes;
+          const sedeExiste = this.sedesDisponiblesModal.find(s => s.id === this.usuarioEnEdicion.sedeId);
+          if (!sedeExiste) {
+            this.usuarioEnEdicion.sedeId = sedes[0].id;
+            this.usuarioEnEdicion.sedeNombre = sedes[0].nombre;
+          } else {
+            this.usuarioEnEdicion.sedeNombre = sedeExiste.nombre;
           }
         } else {
           this.asignarSedesFallback(tenantId);
         }
         this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.asignarSedesFallback(tenantId);
         this.cdr.markForCheck();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -862,11 +867,15 @@ export class UsuariosEmpresasPageComponent implements OnInit {
     this.sedesDisponiblesModal = [
       isWilly
         ? { id: '44444444-4444-4444-4444-444444444444', nombre: 'Sucursal Manchay - Pachacámac', direccion: 'Av. Víctor Malásquez s/n' }
-        : { id: '11111111-1111-1111-1111-111111111111', nombre: 'Sede Cajamarca Central', direccion: 'Av. Central 123' }
+        : { id: '11111111-1111-1111-1111-111111111111', nombre: 'Medicare Farmacia', direccion: 'Av. Central 123, Cajamarca' },
+        { id: '45fca103-2669-48b8-8a1c-7e5380da5e1f', nombre: 'D Kelly Store', direccion: 'Av.Jiron Apurimac 1168' }
     ];
-    if (!this.usuarioEnEdicion.sedeId) {
+    const sedeExiste = this.sedesDisponiblesModal.find(s => s.id === this.usuarioEnEdicion.sedeId);
+    if (!sedeExiste) {
       this.usuarioEnEdicion.sedeId = this.sedesDisponiblesModal[0].id;
       this.usuarioEnEdicion.sedeNombre = this.sedesDisponiblesModal[0].nombre;
+    } else {
+      this.usuarioEnEdicion.sedeNombre = sedeExiste.nombre;
     }
   }
 
@@ -942,6 +951,12 @@ export class UsuariosEmpresasPageComponent implements OnInit {
       this.usuarioEnEdicion.password = this.passwordInput;
     }
 
+    // Asegurar que sedeId y sedeNombre estén presentes
+    if (!this.usuarioEnEdicion.sedeId && this.sedesDisponiblesModal.length > 0) {
+      this.usuarioEnEdicion.sedeId = this.sedesDisponiblesModal[0].id;
+      this.usuarioEnEdicion.sedeNombre = this.sedesDisponiblesModal[0].nombre;
+    }
+
     const payload = { ...this.usuarioEnEdicion };
 
     if (this.modoEdicion && this.usuarioEnEdicion.id) {
@@ -952,9 +967,10 @@ export class UsuariosEmpresasPageComponent implements OnInit {
           this.mostrarAlerta('success', payload.tieneUsuario ? 'Colaborador y credenciales actualizados exitosamente en Master DB.' : 'Colaborador actualizado exitosamente en Master DB.');
           this.cargarDatos();
         },
-        error: () => {
+        error: (err) => {
           this.guardando = false;
-          this.mostrarAlerta('error', 'Error al actualizar colaborador en Master DB.');
+          const msg = err?.error?.message || 'Error al actualizar colaborador en Master DB.';
+          this.mostrarAlerta('error', msg);
           this.cdr.markForCheck();
         }
       });
@@ -966,9 +982,10 @@ export class UsuariosEmpresasPageComponent implements OnInit {
           this.mostrarAlerta('success', payload.tieneUsuario ? 'Colaborador con cuenta de acceso registrado exitosamente.' : 'Colaborador registrado exitosamente en Master DB.');
           this.cargarDatos();
         },
-        error: () => {
+        error: (err) => {
           this.guardando = false;
-          this.mostrarAlerta('error', 'Error al crear colaborador en Master DB.');
+          const msg = err?.error?.message || 'Error al crear colaborador en Master DB.';
+          this.mostrarAlerta('error', msg);
           this.cdr.markForCheck();
         }
       });
